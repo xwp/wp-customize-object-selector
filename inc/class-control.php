@@ -38,7 +38,7 @@ class Control extends \WP_Customize_Control {
 		$this->input_attrs['data-cas-action'] = 'customizer_ajax_select_' . md5( $this->id );
 		switch ( $this->type ) {
 			case 'post':
-				$initial_values = self::get_posts_for_select2( array( 'post__in' => explode( ',', $this->value() ), 'orderby' => 'post__in' ) );
+				$initial_values = $this->get_posts_for_select2( array( 'post__in' => explode( ',', $this->value() ), 'orderby' => 'post__in' ) );
 				break;
 			default:
 				$initial_values = array();
