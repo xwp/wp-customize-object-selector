@@ -36,6 +36,15 @@ class Control extends \WP_Customize_Control {
 		$this->input_attrs['class'] = isset( $this->input_attrs['class'] ) ? $this->input_attrs['class'] . ' customizer-ajax-select' : 'customizer-ajax-select';
 		$this->input_attrs['data-cas-nonce'] = wp_create_nonce( 'cas-' . $this->id );
 		$this->input_attrs['data-cas-action'] = 'customizer_ajax_select_' . md5( $this->id );
+		switch ( $this->type ) {
+			case 'post':
+				$initial_values = self::get_posts_for_select2( array( 'post__in' => explode( ',', $this->value() ), 'orderby' => 'post__in' ) );
+				break;
+			default:
+				$initial_values = array();
+				break;
+		}
+		$this->input_attrs['data-cas-initial-values'] = json_encode( $initial_values );
 		?>
 		<label>
 			<?php if ( ! empty( $this->label ) ) : ?>
@@ -52,13 +61,36 @@ class Control extends \WP_Customize_Control {
 	public function handle_ajax_customizer_ajax_select() {
 		check_ajax_referer( 'cas-' . $this->id );
 
-		$results = array(
-			'results'     => array(),
-			);
-
+		$search = sanitize_text_field( $_GET['s'] );
+		switch ( $this->type ) {
+			case 'post':
+				$results = $this->get_posts_for_select2( array( 's' => $search ) );
+				break;
+		}
 		header('Content-Type: application/json');
 		echo json_encode( array( 'results' => $results ) );
 		exit;
+	}
+
+	/**
+	 * Get posts formatted as Select2 expects them
+	 */
+	private function get_posts_for_select2( $args = array() ) {
+		$defaults = array(
+			'post_status' => 'publish',
+			'post_type' => array( 'post' ),
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+			'no_found_rows' => true
+		);
+		$args = array_merge( $defaults, $this->query_args, $args );
+		$query = new \WP_Query( $args );
+		return array_map( function( $post ) {
+			return array(
+				'id'        => $post->ID,
+				'text'      => htmlspecialchars_decode( html_entity_decode( $post->post_title ), ENT_QUOTES ),
+				);
+		}, $query->posts );
 	}
 
 }
