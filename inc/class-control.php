@@ -34,8 +34,8 @@ class Control extends \WP_Customize_Control {
 
 	protected function render_content() {
 		$this->input_attrs['class'] = isset( $this->input_attrs['class'] ) ? $this->input_attrs['class'] . ' customizer-ajax-select' : 'customizer-ajax-select';
-		$this->input_attrs['cas-nonce'] = wp_create_nonce( 'cas-' . $this->id );
-		$this->input_attrs['cas-action'] = 'customizer_ajax_select_' . md5( $this->id );
+		$this->input_attrs['data-cas-nonce'] = wp_create_nonce( 'cas-' . $this->id );
+		$this->input_attrs['data-cas-action'] = 'customizer_ajax_select_' . md5( $this->id );
 		?>
 		<label>
 			<?php if ( ! empty( $this->label ) ) : ?>
