@@ -27,3 +27,13 @@ spl_autoload_register( function( $class ) {
 			return;
 		}
 });
+
+add_action( 'admin_init', function(){
+	global $pagenow;
+	if ( 'admin-ajax.php' !== $pagenow ) {
+		return;
+	}
+	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
+	$GLOBALS['wp_customize'] = new WP_Customize_Manager();
+	do_action( 'customize_register', $GLOBALS['wp_customize'] );
+});
