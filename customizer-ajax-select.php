@@ -30,7 +30,7 @@ spl_autoload_register( function( $class ) {
 
 add_action( 'admin_init', function(){
 	global $pagenow;
-	if ( 'admin-ajax.php' !== $pagenow ) {
+	if ( 'admin-ajax.php' !== $pagenow || empty( $_GET['doing_customizer_ajax_select'] ) ) {
 		return;
 	}
 	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
