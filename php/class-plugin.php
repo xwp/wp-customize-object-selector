@@ -62,7 +62,7 @@ class Plugin {
 	 * @param \WP_Scripts $wp_scripts Scripts.
 	 */
 	public function register_scripts( \WP_Scripts $wp_scripts ) {
-		$suffix = ( SCRIPT_DEBUG ? '' : '.min' ) . '.js';
+		$suffix = ( SCRIPT_DEBUG || ! file_exists( __DIR__ . '/../js/customize-object-selector-control.min.js' ) ? '' : '.min' ) . '.js';
 
 		$handle = 'select2';
 		if ( ! $wp_scripts->query( $handle, 'registered' ) ) {
@@ -72,6 +72,11 @@ class Plugin {
 			$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 		}
 
+		$handle = 'customize-object-selector-control';
+		$src = plugins_url( 'js/customize-object-selector-control' . $suffix, dirname( __FILE__ ) );
+		$deps = array( 'jquery', 'select2', 'customize-controls' );
+		$in_footer = 1;
+		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 	}
 
 	/**
@@ -99,9 +104,58 @@ class Plugin {
 	}
 
 	/**
-	 * Handle ajax request.
+	 * Handle ajax request for objects.
 	 */
 	public function handle_ajax_object_selector() {
-		wp_send_json_error( 'not implemented' );
+		check_ajax_referer( 'cas-' . $this->id );
+
+		if ( ! isset( $_POST['post_type'] ) ) {
+			wp_send_json_error( 'missing_post_type' );
+		}
+		$post_type = wp_unslash( $_POST['post_type'] );
+		if ( is_string( $post_type ) ) {
+			$post_type = explode( ',', $post_type );
+		}
+		foreach ( $post_type as $cpt ) {
+			if ( ! post_type_exists( $cpt ) ) {
+				wp_send_json_error( 'unknown_post_type' );
+			}
+		}
+		$query_vars = array(
+			'post_type' => $post_type,
+		);
+		if ( ! empty( $_POST['s'] ) ) {
+			$query_vars['s'] = sanitize_text_field( wp_unslash( $_POST['s'] ) );
+		}
+
+		$results = $this->get_posts_for_select2( $query_vars );
+		wp_send_json_success( $results );
+	}
+
+	/**
+	 * Get posts formatted as Select2 expects them.
+	 *
+	 * @param array $args Args.
+	 * @return array Posts
+	 */
+	public function get_posts_for_select2( $args = array() ) {
+		$defaults = array(
+			'post_status' => 'publish',
+			'post_type' => array( 'post' ),
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+			'no_found_rows' => true,
+		);
+		$args = array_merge( $defaults, $args );
+		$query = new \WP_Query( $args );
+		return array_map(
+			function( $post ) {
+				return array(
+					'id' => $post->ID,
+					'text' => htmlspecialchars_decode( html_entity_decode( $post->post_title ), ENT_QUOTES ),
+				);
+			},
+			$query->posts
+		);
 	}
 }
