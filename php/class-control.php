@@ -1,6 +1,11 @@
 <?php
+/**
+ * 
+ *
+ * @package CustomizeObjectSelector
+ */
 
-namespace CustomizeObjectSelectorControl;
+namespace CustomizeObjectSelector;
 
 class Control extends \WP_Customize_Control {
 
@@ -18,7 +23,9 @@ class Control extends \WP_Customize_Control {
 	 * @access public
 	 * @var string
 	 */
-	public $type = 'post';
+	public $type = 'object_selector';
+
+
 
 	public function __construct( $manager, $id, $args = array() ) {
 		parent::__construct( $manager, $id, $args );
