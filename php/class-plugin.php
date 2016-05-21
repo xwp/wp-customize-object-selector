@@ -12,6 +12,8 @@ namespace CustomizeObjectSelector;
  */
 class Plugin {
 
+	const OBJECT_SELECTOR_QUERY_AJAX_ACTION = 'customize_object_selector_query';
+
 	/**
 	 * Plugin version.
 	 *
@@ -43,7 +45,8 @@ class Plugin {
 		add_action( 'customize_register', array( $this, 'customize_register' ) );
 
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customize_controls_enqueue_scripts' ) );
-		add_action( 'wp_ajax_customize_object_selector', array( $this, 'handle_ajax_object_selector' ) );
+		add_action( 'wp_ajax_' . static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, array( $this, 'handle_ajax_object_selector_query' ) );
+		add_filter( 'customize_refresh_nonces', array( $this, 'add_customize_object_selector_nonce' ) );
 	}
 
 	/**
@@ -106,7 +109,7 @@ class Plugin {
 	/**
 	 * Handle ajax request for objects.
 	 */
-	public function handle_ajax_object_selector() {
+	public function handle_ajax_object_selector_query() {
 		check_ajax_referer( 'cas-' . $this->id );
 
 		if ( ! isset( $_POST['post_type'] ) ) {
@@ -157,5 +160,16 @@ class Plugin {
 			},
 			$query->posts
 		);
+	}
+
+	/**
+	 * Add nonce for doing object selector query.
+	 *
+	 * @param array $nonces Nonces.
+	 * @return array Amended nonces.
+	 */
+	public function add_customize_object_selector_nonce( $nonces ) {
+		$nonces[ static::OBJECT_SELECTOR_QUERY_AJAX_ACTION ] = wp_create_nonce( static::OBJECT_SELECTOR_QUERY_AJAX_ACTION );
+		return $nonces;
 	}
 }

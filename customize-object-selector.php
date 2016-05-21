@@ -30,6 +30,7 @@
 global $customize_object_selector_plugin;
 
 if ( version_compare( phpversion(), '5.3', '>=' ) ) {
+	require_once __DIR__ . '/php/class-plugin.php';
 	$class = 'CustomizeObjectSelector\\Plugin';
 	$customize_object_selector_plugin = new $class();
 	add_action( 'plugins_loaded', array( $customize_object_selector_plugin, 'init' ) );
