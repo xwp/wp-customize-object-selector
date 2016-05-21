@@ -1,23 +1,25 @@
 <?php
 /**
- * Plugin Name: Customizer Ajax Select
+ * Plugin Name: Customize Object Selector Control.
  * Version: 0.1-alpha
- * Description: Select posts, terms, or users via AJAX in the Customizer.
+ * Description: Select posts, terms, or users in the Customizer.
  * Author: Daniel Bachhuber
  * Author URI: https://handbuilt.co
  * Plugin URI: https://handbuilt.co
- * Text Domain: customizer-ajax-select
+ * Text Domain: customize-object-selector-control
  * Domain Path: /languages
  */
 
+
+
 spl_autoload_register( function( $class ) {
 		$class = ltrim( $class, '\\' );
-		if ( 0 !== stripos( $class, 'Customizer_Ajax_Select\\' ) ) {
+		if ( 0 !== stripos( $class, 'CustomizeObjectSelectorControl\\' ) ) {
 			return;
 		}
 
 		$parts = explode( '\\', $class );
-		array_shift( $parts ); // Don't need "Customizer_Ajax_Select\"
+		array_shift( $parts ); // Don't need "CustomizeObjectSelectorControl\"
 		$last = array_pop( $parts ); // File should be 'class-[...].php'
 		$last = 'class-' . $last . '.php';
 		$parts[] = $last;
@@ -30,7 +32,7 @@ spl_autoload_register( function( $class ) {
 
 add_action( 'admin_init', function(){
 	global $pagenow;
-	if ( 'admin-ajax.php' !== $pagenow || empty( $_GET['doing_customizer_ajax_select'] ) ) {
+	if ( 'admin-ajax.php' !== $pagenow || empty( $_GET['doing_object_selector'] ) ) {
 		return;
 	}
 	require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';

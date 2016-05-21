@@ -1,6 +1,6 @@
 <?php
 
-namespace Customizer_Ajax_Select;
+namespace CustomizeObjectSelectorControl;
 
 class Control extends \WP_Customize_Control {
 
@@ -23,7 +23,7 @@ class Control extends \WP_Customize_Control {
 	public function __construct( $manager, $id, $args = array() ) {
 		parent::__construct( $manager, $id, $args );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'action_customize_controls_enqueue_scripts' ) );
-		add_action( 'wp_ajax_customizer_ajax_select_' . md5( $this->id ), array( $this, 'handle_ajax_customizer_ajax_select' ) );
+		add_action( 'wp_ajax_object_selector_' . md5( $this->id ), array( $this, 'handle_ajax_object_selector' ) );
 	}
 
 	public function action_customize_controls_enqueue_scripts() {
@@ -35,7 +35,7 @@ class Control extends \WP_Customize_Control {
 	protected function render_content() {
 		$this->input_attrs['class'] = isset( $this->input_attrs['class'] ) ? $this->input_attrs['class'] . ' customizer-ajax-select' : 'customizer-ajax-select';
 		$this->input_attrs['data-cas-nonce'] = wp_create_nonce( 'cas-' . $this->id );
-		$this->input_attrs['data-cas-action'] = 'customizer_ajax_select_' . md5( $this->id );
+		$this->input_attrs['data-cas-action'] = 'object_selector_' . md5( $this->id );
 		switch ( $this->type ) {
 			case 'post':
 				$initial_values = $this->get_posts_for_select2( array( 'post__in' => explode( ',', $this->value() ), 'orderby' => 'post__in' ) );
@@ -58,7 +58,7 @@ class Control extends \WP_Customize_Control {
 		<?php
 	}
 
-	public function handle_ajax_customizer_ajax_select() {
+	public function handle_ajax_object_selector() {
 		check_ajax_referer( 'cas-' . $this->id );
 
 		$search = sanitize_text_field( $_GET['s'] );

@@ -19,7 +19,7 @@
 						s: search,
 						action: el.data('cas-action'),
 						_wpnonce: el.data('cas-nonce'),
-						doing_customizer_ajax_select: true,
+						doing_object_selector: true,
 					}
 					return ajaxParams;
 				}
