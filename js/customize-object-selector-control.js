@@ -55,15 +55,15 @@
 						return response;
 					},
 					data: function ( search ) {
-						var ajaxParams = {
-							post_type: '',
-							s: search,
-							action: el.data( 'cas-action' ),
-							_wpnonce: el.data( 'cas-nonce' ),
-							doing_object_selector: true,
-							wp_customize: 'on'
-						};
-						return ajaxParams;
+						return _.extend(
+							api.previewer.query(),
+							{
+								post_type: '',
+								s: search,
+								action: 'customize_object_selector_query',
+								customize_object_selector_query_nonce: api.settings.nonce.objectSelectorQuery
+							}
+						);
 					}
 				},
 				initSelection: function ( element, callback ) {

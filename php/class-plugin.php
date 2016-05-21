@@ -110,7 +110,10 @@ class Plugin {
 	 * Handle ajax request for objects.
 	 */
 	public function handle_ajax_object_selector_query() {
-		check_ajax_referer( 'cas-' . $this->id );
+		$nonce_query_var_name = 'customize_object_selector_query_nonce';
+		if ( ! check_ajax_referer( static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, $nonce_query_var_name, false ) ) {
+			wp_send_json_error( 'bad_nonce' );
+		}
 
 		if ( ! isset( $_POST['post_type'] ) ) {
 			wp_send_json_error( 'missing_post_type' );
