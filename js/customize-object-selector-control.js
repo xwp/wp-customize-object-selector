@@ -223,7 +223,7 @@
 					}
 					control.select2.empty();
 					_.each( data.results, function( item ) {
-						var option = new Option( item.text, item.id, true );
+						var option = new Option( item.text, item.id, true, true );
 						control.select2.append( option );
 					} );
 					control.select2.trigger( 'change' );
