@@ -46,7 +46,6 @@
 				args.params.content.attr( 'class', 'customize-control customize-control-' + args.params.type );
 			}
 
-			// @todo Add support for settings that are not array values but scalar (non-multiple).
 			// @todo Add support for settingSubproperty (e.g. so we can map a post_parent property of a post setting).
 			api.Control.prototype.initialize.call( control, id, args );
 		},
@@ -97,8 +96,8 @@
 
 			// Sync the select2 values with the setting values.
 			control.select2.on( 'change', function() {
-				control.setting.set( _.map(
-					control.select2.val() || [],
+				control.setSettingValues( _.map(
+					control.getSelectedValues(),
 					function( value ) {
 						return parseInt( value, 10 );
 					}
@@ -113,6 +112,60 @@
 			control.setupSortable();
 
 			api.Control.prototype.ready.call( control );
+		},
+
+		/**
+		 * Get the selected values.
+		 *
+		 * @returns {Number[]} Selected values.
+		 */
+		getSelectedValues: function() {
+			var control = this, selectValues;
+			selectValues = control.select2.val();
+			if ( _.isEmpty( selectValues ) ) {
+				selectValues = [];
+			} else if ( ! _.isArray( selectValues ) ) {
+				selectValues = [ selectValues ];
+			}
+			return _.map(
+				selectValues,
+				function( value ) {
+					return parseInt( value, 10 );
+				}
+			);
+		},
+
+		/**
+		 * Get the setting values.
+		 *
+		 * @returns {Number[]}
+		 */
+		getSettingValues: function() {
+			var control = this, settingValues, value;
+			settingValues = control.setting.get();
+			if ( ! _.isArray( settingValues ) ) {
+				value = parseInt( settingValues, 10 );
+				if ( isNaN( value ) || value <= 0 ) {
+					settingValues = [];
+				} else {
+					settingValues = [ value ];
+				}
+			}
+			return settingValues;
+		},
+
+		/**
+		 * Update the setting according to whether it is an array or scalar.
+		 *
+		 * @param {Number[]} values Values.
+		 */
+		setSettingValues: function( values ) {
+			var control = this;
+			if ( _.isArray( control.setting.get() ) ) {
+				control.setting.set( values );
+			} else {
+				control.setting.set( values[0] || 0 );
+			}
 		},
 
 		/**
@@ -139,7 +192,7 @@
 						option = control.select2.find( 'option[value="' + id + '"]' );
 						control.select2.append( option );
 					});
-					control.setting.set( selectedValues );
+					control.setSettingValues( selectedValues );
 				}
 			});
 		},
@@ -148,22 +201,11 @@
 		 * Re-populate the select options based on the current setting value.
 		 */
 		populateSelectOptions: function() {
-			var control = this, request, settingValues, selectValues;
+			var control = this, request, settingValues, selectedValues;
 
-			settingValues = control.setting.get();
-			if ( _.isNumber( settingValues ) ) {
-				settingValues = [ settingValues ];
-			} else if ( ! _.isArray( settingValues ) ) {
-				settingValues = [];
-			}
-			selectValues = _.map(
-				control.select2.val() || [],
-				function( value ) {
-					return parseInt( value, 10 );
-				}
-			);
-
-			if ( _.isEqual( selectValues, settingValues ) ) {
+			settingValues = control.getSettingValues();
+			selectedValues = control.getSelectedValues();
+			if ( _.isEqual( selectedValues, settingValues ) ) {
 				return;
 			}
 
@@ -181,7 +223,7 @@
 					}
 					control.select2.empty();
 					_.each( data.results, function( item ) {
-						var option = new Option( item.text, item.id, true, true );
+						var option = new Option( item.text, item.id, true );
 						control.select2.append( option );
 					} );
 					control.select2.trigger( 'change' );
