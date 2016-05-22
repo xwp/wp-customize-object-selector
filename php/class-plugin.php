@@ -113,8 +113,11 @@ class Plugin {
 
 	/**
 	 * Handle ajax request for objects.
+	 *
+	 * @global \WP_Customize_Manager $wp_customize
 	 */
 	public function handle_ajax_object_selector_query() {
+		global $wp_customize;
 		$nonce_query_var_name = 'customize_object_selector_query_nonce';
 		if ( ! check_ajax_referer( static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, $nonce_query_var_name, false ) ) {
 			wp_send_json_error( array( 'code' => 'bad_nonce' ) );
@@ -196,6 +199,13 @@ class Plugin {
 					'code' => 'cannot_query_private_posts',
 					'post_type' => $post_type,
 				) );
+			}
+		}
+
+		// Make sure that the Customizer state is applied in any query results (especially via the Customize Posts plugin).
+		if ( ! empty( $wp_customize ) ) {
+			foreach ( $wp_customize->settings() as $setting ) {
+				$setting->preview();
 			}
 		}
 
