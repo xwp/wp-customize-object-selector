@@ -54,11 +54,15 @@ class Control extends \WP_Customize_Control {
 		}
 		?>
 		<#
+		var postTypes = [];
 		_.defaults( data, <?php echo wp_json_encode( $data ) ?> );
 		data.input_id = 'input-' + String( Math.random() );
 		data.input_attrs['class'] += ' object-selector';
 		if ( data.select2_options.multiple ) {
 			data.input_attrs['multiple'] = '';
+		}
+		if ( data.post_query_args.post_type ) {
+			postTypes = _.isArray( data.post_query_args.post_type ) ? data.post_query_args.post_type : [ data.post_query_args.post_type ];
 		}
 		#>
 		<span class="customize-control-title"><label for="{{ data.input_id }}">{{ data.label }}</label></span>
@@ -70,6 +74,17 @@ class Control extends \WP_Customize_Control {
 				{{{ key }}}="{{ value }}"
 			<# } ) #>
 			/>
+		<# if ( data.show_addition_buttons && postTypes.length > 0 ) { #>
+			<span class="add-new-post">
+				<# if ( 1 === postTypes.length ) { #>
+					<button type="button" class="button secondary-button">Add {{ postTypes[0] }}…</button>
+				<# } else { #>
+					<# _.each( postTypes, function( post_type ) { #>
+						<button type="button" class="button secondary-button">Add {{ post_type }}…</button>
+					<# } ) #>
+				<# } #>
+			</span>
+		<# } #>
 		<div class="customize-control-notifications"></div>
 		<?php
 	}
