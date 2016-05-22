@@ -42,7 +42,7 @@ class Plugin {
 		add_action( 'wp_default_scripts', array( $this, 'register_scripts' ), 100 );
 		add_action( 'wp_default_styles', array( $this, 'register_styles' ), 100 );
 
-		add_action( 'customize_register', array( $this, 'customize_register' ) );
+		add_action( 'customize_register', array( $this, 'customize_register' ), 9 );
 
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customize_controls_enqueue_scripts' ) );
 		add_action( 'wp_ajax_' . static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, array( $this, 'handle_ajax_object_selector_query' ) );
@@ -65,7 +65,7 @@ class Plugin {
 	 * @param \WP_Scripts $wp_scripts Scripts.
 	 */
 	public function register_scripts( \WP_Scripts $wp_scripts ) {
-		$suffix = ( SCRIPT_DEBUG || ! file_exists( __DIR__ . '/../js/customize-object-selector-control.min.js' ) ? '' : '.min' ) . '.js';
+		$suffix = ( SCRIPT_DEBUG ? '' : '.min' ) . '.js';
 
 		$handle = 'select2';
 		if ( ! $wp_scripts->query( $handle, 'registered' ) ) {
@@ -76,7 +76,7 @@ class Plugin {
 		}
 
 		$handle = 'customize-object-selector-control';
-		$src = plugins_url( 'js/customize-object-selector-control' . $suffix, dirname( __FILE__ ) );
+		$src = plugins_url( 'js/customize-object-selector-control.js', dirname( __FILE__ ) );
 		$deps = array( 'jquery', 'select2', 'customize-controls' );
 		$in_footer = 1;
 		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
@@ -96,14 +96,19 @@ class Plugin {
 			$deps = array();
 			$wp_styles->add( $handle, $src, $deps, $this->version );
 		}
+
+		$handle = 'customize-object-selector-control';
+		$src = plugins_url( 'css/customize-object-selector-control.css', dirname( __FILE__ ) );
+		$deps = array( 'customize-controls', 'select2' );
+		$wp_styles->add( $handle, $src, $deps, $this->version );
 	}
 
 	/**
 	 * Enqueue controls scripts.
 	 */
 	public function customize_controls_enqueue_scripts() {
-		wp_enqueue_script( 'select2' );
-		wp_enqueue_style( 'select2' );
+		wp_enqueue_script( 'customize-object-selector-control' );
+		wp_enqueue_style( 'customize-object-selector-control' );
 	}
 
 	/**
@@ -112,57 +117,117 @@ class Plugin {
 	public function handle_ajax_object_selector_query() {
 		$nonce_query_var_name = 'customize_object_selector_query_nonce';
 		if ( ! check_ajax_referer( static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, $nonce_query_var_name, false ) ) {
-			wp_send_json_error( 'bad_nonce' );
+			wp_send_json_error( array( 'code' => 'bad_nonce' ) );
+		}
+		if ( ! isset( $_POST['post_query_args'] ) ) {
+			wp_send_json_error( array( 'code' => 'missing_post_query_args' ) );
+		}
+		$post_query_args = json_decode( wp_unslash( $_POST['post_query_args'] ), true );
+		if ( ! is_array( $post_query_args ) ) {
+			wp_send_json_error( array( 'code' => 'invalid_post_query_args' ) );
 		}
 
-		if ( ! isset( $_POST['post_type'] ) ) {
-			wp_send_json_error( 'missing_post_type' );
+		// Whitelist allowed query vars.
+		$allowed_query_vars = array(
+			'post_status',
+			'post_type',
+			's',
+			'paged',
+		);
+		$extra_query_vars = array_diff( array_keys( $post_query_args ), $allowed_query_vars );
+		if ( ! empty( $extra_query_vars ) ) {
+			wp_send_json_error( array(
+				'code' => 'disallowed_query_var',
+				'query_vars' => array_values( $extra_query_vars ),
+			) );
 		}
-		$post_type = wp_unslash( $_POST['post_type'] );
-		if ( is_string( $post_type ) ) {
-			$post_type = explode( ',', $post_type );
+		if ( empty( $post_query_args['paged'] ) ) {
+			$post_query_args['paged'] = 1;
 		}
-		foreach ( $post_type as $cpt ) {
-			if ( ! post_type_exists( $cpt ) ) {
-				wp_send_json_error( 'unknown_post_type' );
+
+		// Get the queried post statuses and determine if if any of them are for a non-publicly queryable status.
+		$has_private_status = false;
+		if ( ! isset( $post_query_args['post_status'] ) ) {
+			$post_query_args['post_status'] = array();
+		} elseif ( is_string( $post_query_args['post_status'] ) ) {
+			$post_query_args['post_status'] = explode( ',', $post_query_args['post_status'] );
+		}
+		foreach ( $post_query_args['post_status'] as $post_status ) {
+			$post_status_object = get_post_status_object( $post_status );
+			if ( ! $post_status_object ) {
+				wp_send_json_error( array(
+					'code' => 'bad_post_status',
+					'post_status' => $post_status,
+				) );
+			}
+			if ( ! empty( $post_status_object->publicly_queryable ) ) {
+				$has_private_status = true;
 			}
 		}
-		$query_vars = array(
-			'post_type' => $post_type,
-		);
-		if ( ! empty( $_POST['s'] ) ) {
-			$query_vars['s'] = sanitize_text_field( wp_unslash( $_POST['s'] ) );
+
+		// Get the queried post types and determine if any of them are not allowed to be queried.
+		if ( ! isset( $post_query_args['post_type'] ) ) {
+			$post_query_args['post_type'] = array();
+		} elseif ( is_string( $post_query_args['post_type'] ) ) {
+			$post_query_args['post_type'] = explode( ',', $post_query_args['post_type'] );
+		}
+		foreach ( $post_query_args['post_type'] as $post_type ) {
+			$post_type_object = get_post_type_object( $post_type );
+			if ( ! $post_type_object ) {
+				wp_send_json_error( array(
+					'code' => 'bad_post_type',
+					'post_type' => $post_type,
+				) );
+			}
+			if ( ! current_user_can( $post_type_object->cap->read ) ) {
+				wp_send_json_error( array(
+					'code' => 'cannot_query_posts',
+					'post_type' => $post_type,
+				) );
+			}
+			if ( $has_private_status && ! current_user_can( $post_type_object->cap->read_private_posts ) ) {
+				wp_send_json_error( array(
+					'code' => 'cannot_query_private_posts',
+					'post_type' => $post_type,
+				) );
+			}
 		}
 
-		$results = $this->get_posts_for_select2( $query_vars );
-		wp_send_json_success( $results );
-	}
+		$query = new \WP_Query( array_merge(
+			array(
+				'post_status' => 'publish',
+				'post_type' => array( 'post' ),
+				'update_post_meta_cache' => false,
+				'update_post_term_cache' => false,
+				'no_found_rows' => false,
+			),
+			$post_query_args
+		) );
 
-	/**
-	 * Get posts formatted as Select2 expects them.
-	 *
-	 * @param array $args Args.
-	 * @return array Posts
-	 */
-	public function get_posts_for_select2( $args = array() ) {
-		$defaults = array(
-			'post_status' => 'publish',
-			'post_type' => array( 'post' ),
-			'update_post_meta_cache' => false,
-			'update_post_term_cache' => false,
-			'no_found_rows' => true,
-		);
-		$args = array_merge( $defaults, $args );
-		$query = new \WP_Query( $args );
-		return array_map(
-			function( $post ) {
+		$is_multiple_post_types = count( $query->get( 'post_type' ) ) > 1;
+
+		$results = array_map(
+			function( $post ) use ( $is_multiple_post_types ) {
+				$text = htmlspecialchars_decode( html_entity_decode( $post->post_title ), ENT_QUOTES );
+				if ( $is_multiple_post_types ) {
+					$post_type_obj = get_post_type_object( $post->post_type );
+					/* translators: 1: post title, 2: post type name */
+					$text = sprintf( __( '%1$s (%2$s)', 'customize-object-selector' ), $text, $post_type_obj->labels->singular_name );
+				}
 				return array(
 					'id' => $post->ID,
-					'text' => htmlspecialchars_decode( html_entity_decode( $post->post_title ), ENT_QUOTES ),
+					'text' => $text,
 				);
 			},
 			$query->posts
 		);
+
+		wp_send_json_success( array(
+			'results' => $results,
+			'pagination' => array(
+				'more' => $post_query_args['paged'] < $query->max_num_pages,
+			),
+		) );
 	}
 
 	/**
