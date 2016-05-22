@@ -87,10 +87,15 @@
 						}
 					}
 				},
-				control.params.select2_options
+				control.params.select2_options,
+				{
+					disabled: true
+				}
 			) );
 
-			control.populateSelectOptions();
+			control.populateSelectOptions().done( function() {
+				control.select2.prop( 'disabled', false );
+			} );
 
 			// Sync the select2 values with the setting values.
 			control.select2.on( 'change', function() {
@@ -199,17 +204,16 @@
 		 * Re-populate the select options based on the current setting value.
 		 */
 		populateSelectOptions: function() {
-			var control = this, request, settingValues, selectedValues;
+			var control = this, request, settingValues, selectedValues, deferred = jQuery.Deferred();
 
 			settingValues = control.getSettingValues();
 			selectedValues = control.getSelectedValues();
 			if ( _.isEqual( selectedValues, settingValues ) ) {
-				return;
-			}
-
-			if ( 0 === settingValues.length ) {
+				deferred.resolve();
+			} else if ( 0 === settingValues.length ) {
 				control.select2.empty();
 				control.select2.trigger( 'change' );
+				deferred.resolve();
 			} else {
 				request = control.queryPosts({
 					post__in: settingValues,
@@ -225,6 +229,7 @@
 						control.select2.append( option );
 					} );
 					control.select2.trigger( 'change' );
+					deferred.resolve();
 				} );
 				request.fail( function() {
 					var notification;
@@ -236,8 +241,10 @@
 						} );
 						control.notifications.add( notification.code, notification );
 					}
+					deferred.reject();
 				} );
 			}
+			return deferred.promise();
 		},
 
 		/**
