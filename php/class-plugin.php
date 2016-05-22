@@ -133,6 +133,9 @@ class Plugin {
 			'post_type',
 			's',
 			'paged',
+			'post__in',
+			'orderby',
+			'order',
 		);
 		$extra_query_vars = array_diff( array_keys( $post_query_args ), $allowed_query_vars );
 		if ( ! empty( $extra_query_vars ) ) {
@@ -143,6 +146,9 @@ class Plugin {
 		}
 		if ( empty( $post_query_args['paged'] ) ) {
 			$post_query_args['paged'] = 1;
+		}
+		if ( ! empty( $post_query_args['post__in'] ) ) {
+			$post_query_args['posts_per_page'] = -1;
 		}
 
 		// Get the queried post statuses and determine if if any of them are for a non-publicly queryable status.
@@ -197,6 +203,7 @@ class Plugin {
 			array(
 				'post_status' => 'publish',
 				'post_type' => array( 'post' ),
+				'ignore_sticky_posts' => true,
 				'update_post_meta_cache' => false,
 				'update_post_term_cache' => false,
 				'no_found_rows' => false,

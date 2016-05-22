@@ -51,64 +51,65 @@
 		},
 
 		/**
+		 * Query posts.
+		 *
+		 * @param {object} queryVars
+		 * @returns {jQuery.promise}
+		 */
+		queryPosts: function( queryVars ) {
+			var control = this, action, data, postQueryArgs = {};
+			action = 'customize_object_selector_query';
+			data = api.previewer.query();
+			data.customize_object_selector_query_nonce = api.settings.nonce[ action ];
+			_.extend(
+				postQueryArgs,
+				control.params.post_query_args || {},
+				queryVars
+			);
+			data.post_query_args = JSON.stringify( postQueryArgs );
+			return wp.ajax.post( action, data );
+		},
+
+		/**
 		 * @inheritdoc
 		 */
 		ready: function() {
-			var control = this, select;
+			var control = this;
 
-			select = control.container.find( '.object-selector:first' );
-
-			select.select2( _.extend(
+			control.select2 = control.container.find( '.object-selector:first' ).select2( _.extend(
 				{
 					ajax: {
 						transport: function ( params, success, failure ) {
-							var request, action, data, postQueryArgs = null, userQueryArgs = null, termQueryArgs = null;
-							action = 'customize_object_selector_query';
-							data = api.previewer.query();
-							data.customize_object_selector_query_nonce = api.settings.nonce[ action ];
-							if ( null !== control.params.post_query_args ) {
-								postQueryArgs = _.extend( {}, control.params.post_query_args );
-							}
-							// @todo Implement user and term queries.
-							// @todo userQueryArgs.search = params.term;
-							// if ( null !== control.params.term_query_args ) {
-							// 	userQueryArgs = _.extend( {}, control.params.term_query_args );
-							// }
-							// @todo termQueryArgs.name__like = '%' + params.term + '%';
-							// if ( null !== control.params.user_query_args ) {
-							// 	termQueryArgs = _.extend( {}, control.params.user_query_args );
-							// }
-							if ( ! postQueryArgs ) {
-								postQueryArgs = {};
-							}
-							if ( postQueryArgs ) {
-								postQueryArgs.s = params.data.term;
-								postQueryArgs.paged = params.data.page || 1;
-								data.post_query_args = JSON.stringify( postQueryArgs );
-							}
-
-							request = wp.ajax.post( action, data );
+							var request = control.queryPosts({
+								s: params.data.term,
+								paged: params.data.page || 1
+							});
 							request.done( success );
 							request.fail( failure );
 						}
-					},
-					// initSelection: function ( element, callback ) {
-					// 	var objectIds, selectedValues;
-					//
-					// 	objectIds = control.setting.get();
-					// 	if ( ! _.isArray( objectIds ) ) {
-					// 		objectIds = [ objectIds ];
-					// 	}
-					//
-					// 	// @todo Obtain the posts data for objectIds
-					// 	selectedValues = _.map(  function() {}, objectIds );
-					// 	selectedValues = [];
-					//
-					// 	callback( selectedValues );
-					// }
+					}
 				},
 				control.params.select2_options
 			) );
+
+			control.populateSelectOptions();
+
+			// Sync the select2 values with the setting values.
+			control.select2.on( 'change', function() {
+				control.setting.set( _.map(
+					control.select2.val() || [],
+					function( value ) {
+						return parseInt( value, 10 );
+					}
+				) );
+			} );
+
+			// Sync the setting values with the select2 values.
+			control.setting.bind( function() {
+				control.populateSelectOptions();
+			} );
+
+			// @todo Allow sorting of items.
 			// select.select2( 'container' ).find( 'ul.select2-choices' ).sortable( {
 			// 	containment: 'parent',
 			// 	start: function () {
@@ -120,6 +121,62 @@
 			// } );
 
 			api.Control.prototype.ready.call( control );
+		},
+
+		/**
+		 * Re-populate the select options based on the current setting value.
+		 */
+		populateSelectOptions: function() {
+			var control = this, request, settingValues, selectValues;
+
+			settingValues = control.setting.get();
+			if ( _.isNumber( settingValues ) ) {
+				settingValues = [ settingValues ];
+			} else if ( ! _.isArray( settingValues ) ) {
+				settingValues = [];
+			}
+			selectValues = _.map(
+				control.select2.val() || [],
+				function( value ) {
+					return parseInt( value, 10 );
+				}
+			);
+
+			if ( _.isEqual( selectValues, settingValues ) ) {
+				return;
+			}
+
+			if ( 0 === settingValues.length ) {
+				control.select2.empty();
+				control.select2.trigger( 'change' );
+			} else {
+				request = control.queryPosts({
+					post__in: settingValues,
+					orderby: 'post__in'
+				});
+				request.done( function( data ) {
+					if ( control.notifications ) {
+						control.notifications.remove( 'select2_init_failure' );
+					}
+					control.select2.empty();
+					_.each( data.results, function( item ) {
+						var option = new Option( item.text, item.id, true, true );
+						control.select2.append( option );
+					} );
+					control.select2.trigger( 'change' );
+				} );
+				request.fail( function() {
+					var notification;
+					if ( api.Notification && control.notifications ) {
+						// @todo Allow clicking on this notification to re-call populateSelectOptions()
+						notification = new api.Notification( 'select2_init_failure', {
+							type: 'error',
+							message: 'Failed to fetch selections.' // @todo l10n
+						} );
+						control.notifications.add( notification.code, notification );
+					}
+				} );
+			}
 		},
 
 		/**
