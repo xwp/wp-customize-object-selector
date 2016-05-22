@@ -77,7 +77,7 @@ class Plugin {
 
 		$handle = 'customize-object-selector-control';
 		$src = plugins_url( 'js/customize-object-selector-control.js', dirname( __FILE__ ) );
-		$deps = array( 'jquery', 'select2', 'customize-controls' );
+		$deps = array( 'jquery', 'select2', 'customize-controls', 'jquery-ui-sortable' );
 		$in_footer = 1;
 		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 	}

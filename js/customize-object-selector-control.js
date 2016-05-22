@@ -46,7 +46,8 @@
 				args.params.content.attr( 'class', 'customize-control customize-control-' + args.params.type );
 			}
 
-			// @todo Add support for settingSubproperty.
+			// @todo Add support for settings that are not array values but scalar (non-multiple).
+			// @todo Add support for settingSubproperty (e.g. so we can map a post_parent property of a post setting).
 			api.Control.prototype.initialize.call( control, id, args );
 		},
 
@@ -109,18 +110,38 @@
 				control.populateSelectOptions();
 			} );
 
-			// @todo Allow sorting of items.
-			// select.select2( 'container' ).find( 'ul.select2-choices' ).sortable( {
-			// 	containment: 'parent',
-			// 	start: function () {
-			// 		select.select2( 'onSortStart' );
-			// 	},
-			// 	update: function () {
-			// 		select.select2( 'onSortEnd' );
-			// 	}
-			// } );
+			control.setupSortable();
 
 			api.Control.prototype.ready.call( control );
+		},
+
+		/**
+		 * Setup sortable.
+		 */
+		setupSortable: function() {
+			var control = this, ul;
+			if ( ! control.params.select2_options.multiple ) {
+				return;
+			}
+
+			ul = control.select2.next( '.select2-container' ).first( 'ul.select2-selection__rendered' );
+			ul.sortable({
+				placeholder: 'ui-state-highlight',
+				forcePlaceholderSize: true,
+				items: 'li:not(.select2-search__field)',
+				tolerance: 'pointer',
+				stop: function() {
+					var selectedValues = [];
+					ul.find( '.select2-selection__choice' ).each( function() {
+						var id, option;
+						id = parseInt( $( this ).data( 'data' ).id, 10 );
+						selectedValues.push( id );
+						option = control.select2.find( 'option[value="' + id + '"]' );
+						control.select2.append( option );
+					});
+					control.setting.set( selectedValues );
+				}
+			});
 		},
 
 		/**
