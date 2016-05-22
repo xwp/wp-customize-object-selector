@@ -89,9 +89,7 @@
 
 							request = wp.ajax.post( action, data );
 							request.done( success );
-							request.fail( function() {
-								console.info( arguments )
-							} );
+							request.fail( failure );
 						}
 					},
 					// initSelection: function ( element, callback ) {
