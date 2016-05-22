@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Customize Object Selector
  * Version: 0.2-alpha
- * Description: Adds a Customizer control to select posts, terms, or users.
+ * Description: Adds a Customizer control to select posts (and eventually terms and users).
  * Author: Daniel Bachhuber (<a href="https://handbuilt.co">Hand Built</a>), Weston Ruter (<a href="https://make.xwp.co/">XWP</a>)
  * Plugin URI: https://github.com/xwp/wp-customize-object-selector
  * Text Domain: customize-object-selector

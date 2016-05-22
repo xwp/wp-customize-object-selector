@@ -21,9 +21,7 @@
 			args.params = _.extend(
 				{
 					select2_options: {},
-					post_query_args: null,
-					user_query_args: null,
-					term_query_args: null
+					post_query_args: null
 				},
 				args.params || {}
 			);

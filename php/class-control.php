@@ -15,7 +15,7 @@ namespace CustomizeObjectSelector;
 class Control extends \WP_Customize_Control {
 
 	/**
-	 * Type of data to be queried (post, user, term)
+	 * Control type.
 	 *
 	 * @access public
 	 * @var string
@@ -35,24 +35,6 @@ class Control extends \WP_Customize_Control {
 	 * @var array|null
 	 */
 	public $post_query_args;
-
-	/**
-	 * Query args for users.
-	 *
-	 * @todo This is not yet implemented.
-	 *
-	 * @var array|null
-	 */
-	public $user_query_args;
-
-	/**
-	 * Query args for terms.
-	 *
-	 * @todo This is not yet implemented.
-	 *
-	 * @var array|null
-	 */
-	public $term_query_args;
 
 	/**
 	 * An Underscore (JS) template for this control's content (but not its container).
@@ -103,8 +85,6 @@ class Control extends \WP_Customize_Control {
 			wp_array_slice_assoc( get_object_vars( $this ), array(
 				'select2_options',
 				'post_query_args',
-				'term_query_args',
-				'user_query_args',
 			) )
 		);
 	}
