@@ -210,6 +210,11 @@ class Plugin {
 		// Make sure that the Customizer state is applied in any query results (especially via the Customize Posts plugin).
 		if ( ! empty( $wp_customize ) ) {
 			foreach ( $wp_customize->settings() as $setting ) {
+				/**
+				 * Setting.
+				 *
+				 * @var \WP_Customize_Setting $setting
+				 */
 				$setting->preview();
 			}
 		}
@@ -228,6 +233,8 @@ class Plugin {
 
 		$is_multiple_post_types = count( $query->get( 'post_type' ) ) > 1;
 
+		// @todo Eventually export all $post data to client and let processResults do this logic client-side.
+		// @todo Include featured image thumbnail if requested.
 		$results = array_map(
 			function( $post ) use ( $is_multiple_post_types ) {
 				$title = htmlspecialchars_decode( html_entity_decode( $post->post_title ), ENT_QUOTES );
