@@ -225,11 +225,20 @@ class Plugin {
 
 		$results = array_map(
 			function( $post ) use ( $is_multiple_post_types ) {
-				$text = htmlspecialchars_decode( html_entity_decode( $post->post_title ), ENT_QUOTES );
-				if ( $is_multiple_post_types ) {
-					$post_type_obj = get_post_type_object( $post->post_type );
-					/* translators: 1: post title, 2: post type name */
-					$text = sprintf( __( '%1$s (%2$s)', 'customize-object-selector' ), $text, $post_type_obj->labels->singular_name );
+				$title = htmlspecialchars_decode( html_entity_decode( $post->post_title ), ENT_QUOTES );
+				$post_type_obj = get_post_type_object( $post->post_type );
+				$post_status_obj = get_post_status_object( $post->post_status );
+				$is_publish_status = ( 'publish' === $post->post_status );
+
+				$text = '';
+				if ( ! $is_publish_status && $post_status_obj ) {
+					/* translators: 1: post status */
+					$text .= sprintf( __( '[%1$s] ', 'customize-object-selector' ), $post_status_obj->label );
+				}
+				$text .= $title;
+				if ( $is_multiple_post_types && $post_type_obj ) {
+					/* translators: 1: post type name */
+					$text .= sprintf( __( ' (%1$s)', 'customize-object-selector' ), $post_type_obj->labels->singular_name );
 				}
 				return array(
 					'id' => $post->ID,
