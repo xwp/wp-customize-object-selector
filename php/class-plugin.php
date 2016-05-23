@@ -154,16 +154,11 @@ class Plugin {
 		if ( ! empty( $post_query_args['post__in'] ) ) {
 			$post_query_args['posts_per_page'] = -1;
 		}
-		if ( empty( $post_query_args['post_type'] ) ) {
-			wp_send_json_error( array(
-				'code' => 'missing_post_type',
-			) );
-		}
 
 		// Get the queried post statuses and determine if if any of them are for a non-publicly queryable status.
 		$has_private_status = false;
-		if ( ! isset( $post_query_args['post_status'] ) ) {
-			$post_query_args['post_status'] = array();
+		if ( empty( $post_query_args['post_status'] ) ) {
+			$post_query_args['post_status'] = array( 'publish' );
 		} elseif ( is_string( $post_query_args['post_status'] ) ) {
 			$post_query_args['post_status'] = explode( ',', $post_query_args['post_status'] );
 		}
@@ -181,8 +176,8 @@ class Plugin {
 		}
 
 		// Get the queried post types and determine if any of them are not allowed to be queried.
-		if ( ! isset( $post_query_args['post_type'] ) ) {
-			$post_query_args['post_type'] = array();
+		if ( empty( $post_query_args['post_type'] ) ) {
+			$post_query_args['post_type'] = array( 'post' );
 		} elseif ( is_string( $post_query_args['post_type'] ) ) {
 			$post_query_args['post_type'] = explode( ',', $post_query_args['post_type'] );
 		}
