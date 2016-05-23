@@ -14,7 +14,7 @@
 	api.ObjectSelectorControl = api.Control.extend({
 
 		initialize: function( id, options ) {
-			var control = this, args, params;
+			var control = this, args;
 
 			args = options || {};
 
@@ -120,7 +120,7 @@
 		/**
 		 * Get the selected values.
 		 *
-		 * @returns {Number[]} Selected values.
+		 * @returns {Number[]} Selected IDs.
 		 */
 		getSelectedValues: function() {
 			var control = this, selectValues;
@@ -141,7 +141,7 @@
 		/**
 		 * Get the setting values.
 		 *
-		 * @returns {Number[]}
+		 * @returns {Number[]} IDs.
 		 */
 		getSettingValues: function() {
 			var control = this, settingValues, value;
@@ -160,11 +160,14 @@
 		/**
 		 * Update the setting according to whether it is an array or scalar.
 		 *
-		 * @param {Number[]} values Values.
+		 * If multiple, an array will be saved to the setting; if not multiple
+		 * then the first value will be set, or 0 if empty.
+		 *
+		 * @param {Number[]} values IDs.
 		 */
 		setSettingValues: function( values ) {
 			var control = this;
-			if ( _.isArray( control.setting.get() ) ) {
+			if ( control.params.select2_options.multiple ) {
 				control.setting.set( values );
 			} else {
 				control.setting.set( values[0] || 0 );
@@ -202,6 +205,8 @@
 
 		/**
 		 * Re-populate the select options based on the current setting value.
+		 *
+		 * @returns {jQuery.promise} Resolves when complete. Rejected when failed.
 		 */
 		populateSelectOptions: function() {
 			var control = this, request, settingValues, selectedValues, deferred = jQuery.Deferred();
