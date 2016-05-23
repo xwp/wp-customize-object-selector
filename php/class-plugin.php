@@ -132,6 +132,7 @@ class Plugin {
 
 		// Whitelist allowed query vars.
 		$allowed_query_vars = array(
+			'include_featured_images',
 			'post_status',
 			'post_type',
 			's',
@@ -219,12 +220,14 @@ class Plugin {
 			}
 		}
 
+		$include_featured_images = ! empty( $post_query_args['include_featured_images'] );
+
 		$query = new \WP_Query( array_merge(
 			array(
 				'post_status' => 'publish',
 				'post_type' => array( 'post' ),
 				'ignore_sticky_posts' => true,
-				'update_post_meta_cache' => false,
+				'update_post_meta_cache' => $include_featured_images,
 				'update_post_term_cache' => false,
 				'no_found_rows' => false,
 			),
@@ -233,10 +236,8 @@ class Plugin {
 
 		$is_multiple_post_types = count( $query->get( 'post_type' ) ) > 1;
 
-		// @todo Eventually export all $post data to client and let processResults do this logic client-side.
-		// @todo Include featured image thumbnail if requested.
 		$results = array_map(
-			function( $post ) use ( $is_multiple_post_types ) {
+			function( $post ) use ( $is_multiple_post_types, $include_featured_images ) {
 				$title = htmlspecialchars_decode( html_entity_decode( $post->post_title ), ENT_QUOTES );
 				$post_type_obj = get_post_type_object( $post->post_type );
 				$post_status_obj = get_post_status_object( $post->post_status );
@@ -252,10 +253,24 @@ class Plugin {
 					/* translators: 1: post type name */
 					$text .= sprintf( __( ' (%1$s)', 'customize-object-selector' ), $post_type_obj->labels->singular_name );
 				}
-				return array(
+				$result = array(
 					'id' => $post->ID,
 					'text' => $text,
+					'post_title' => $title,
+					'post_type' => $post->post_type,
+					'post_status' => $post->post_status,
+					'post_date_gmt' => $post->post_date_gmt,
+					'post_author' => $post->post_author,
 				);
+				if ( $include_featured_images ) {
+					$attachment_id = get_post_thumbnail_id( $post->ID );
+					if ( $attachment_id ) {
+						$result['featured_image'] = wp_prepare_attachment_for_js( $attachment_id );
+					} else {
+						$result['featured_image'] = null;
+					}
+				}
+				return $result;
 			},
 			$query->posts
 		);

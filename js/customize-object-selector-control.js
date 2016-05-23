@@ -89,7 +89,7 @@
 				},
 				control.params.select2_options,
 				{
-					disabled: true
+					disabled: true // Enabled once populated.
 				}
 			) );
 
