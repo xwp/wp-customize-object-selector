@@ -161,6 +161,8 @@ class Plugin {
 			$post_query_args['post_status'] = array( 'publish' );
 		} elseif ( is_string( $post_query_args['post_status'] ) ) {
 			$post_query_args['post_status'] = explode( ',', $post_query_args['post_status'] );
+		} else {
+			$post_query_args['post_status'] = (array) $post_query_args['post_status'];
 		}
 		foreach ( $post_query_args['post_status'] as $post_status ) {
 			$post_status_object = get_post_status_object( $post_status );
@@ -180,6 +182,8 @@ class Plugin {
 			$post_query_args['post_type'] = array( 'post' );
 		} elseif ( is_string( $post_query_args['post_type'] ) ) {
 			$post_query_args['post_type'] = explode( ',', $post_query_args['post_type'] );
+		} else {
+			$post_query_args['post_type'] = (array) $post_query_args['post_type'];
 		}
 		foreach ( $post_query_args['post_type'] as $post_type ) {
 			$post_type_object = get_post_type_object( $post_type );
