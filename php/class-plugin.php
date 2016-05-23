@@ -153,6 +153,11 @@ class Plugin {
 		if ( ! empty( $post_query_args['post__in'] ) ) {
 			$post_query_args['posts_per_page'] = -1;
 		}
+		if ( empty( $post_query_args['post_type'] ) ) {
+			wp_send_json_error( array(
+				'code' => 'missing_post_type',
+			) );
+		}
 
 		// Get the queried post statuses and determine if if any of them are for a non-publicly queryable status.
 		$has_private_status = false;
