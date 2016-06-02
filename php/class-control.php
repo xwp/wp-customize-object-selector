@@ -90,6 +90,11 @@ class Control extends \WP_Customize_Control {
 	}
 
 	/**
+	 * No-op since JS template is doing the work.
+	 */
+	protected function render_content() {}
+
+	/**
 	 * Export control params to JS.
 	 *
 	 * @return array
