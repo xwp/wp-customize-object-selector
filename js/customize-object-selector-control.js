@@ -1,5 +1,7 @@
 /* global wp */
 /* eslint consistent-this: [ "error", "control" ] */
+/* eslint no-magic-numbers: ["error", { "ignore": [0,1] }] */
+/* eslint complexity: ["error", 8] */
 
 (function( api, $ ) {
 	'use strict';
@@ -14,7 +16,7 @@
 	api.ObjectSelectorControl = api.Control.extend({
 
 		initialize: function( id, options ) {
-			var control = this, args;
+			var control = this, args, postTypes = [];
 
 			args = options || {};
 
@@ -42,6 +44,35 @@
 				args.params.content = $( '<li></li>' );
 				args.params.content.attr( 'id', 'customize-control-' + id.replace( /]/g, '' ).replace( /\[/g, '-' ) );
 				args.params.content.attr( 'class', 'customize-control customize-control-' + args.params.type );
+			}
+
+			// Set up parameters for post_addition_buttons.
+			if ( _.isUndefined( args.params.post_addition_buttons ) && api.Posts && api.Posts.insertAutoDraftPost ) {
+				if ( ! args.params.post_query_args.post_type ) {
+					postTypes = [ 'post' ];
+				} else if ( _.isArray( args.params.post_query_args.post_type ) ) {
+					postTypes = args.params.post_query_args.post_type;
+				} else {
+					postTypes = args.params.post_query_args.post_type.split( /,/ );
+				}
+
+				postTypes = _.filter( postTypes, function ( postType ) {
+					return ! _.isUndefined( api.Posts.data.postTypes[ postType ] ) && api.Posts.data.postTypes[ postType ].show_in_customizer;
+				} );
+
+				args.params.post_addition_buttons = [];
+				_.each( postTypes, function( postType ) {
+					var label;
+					if ( postTypes.length > 1 ) {
+						label = api.Posts.data.postTypes[ postType ].labels.add_new_item || api.Posts.data.postTypes[ postType ].labels.add_new;
+					} else {
+						label = api.Posts.data.postTypes[ postType ].labels.add_new || api.Posts.data.postTypes[ postType ].labels.add_new_item;
+					}
+					args.params.post_addition_buttons.push( {
+						post_type: postType,
+						label: label
+					} );
+				} );
 			}
 
 			// @todo Add support for settingSubproperty (e.g. so we can map a post_parent property of a post setting).
@@ -113,6 +144,8 @@
 			} );
 
 			control.setupSortable();
+
+			control.setupAddNewButtons();
 
 			api.Control.prototype.ready.call( control );
 		},
@@ -201,6 +234,76 @@
 					control.setSettingValues( selectedValues );
 				}
 			});
+		},
+
+		/**
+		 * Setup buttons for adding new posts.
+		 *
+		 * @returns {void}
+		 */
+		setupAddNewButtons: function setupAddNewButtons() {
+			var control = this;
+
+			// Set up the add new post buttons
+			control.container.on( 'click', '.add-new-post-button', function() {
+				var promise, button;
+				button = $( this );
+				button.prop( 'disabled', true );
+				promise = api.Posts.insertAutoDraftPost( $( this ).data( 'postType' ) );
+
+				promise.done( function( data ) {
+					var returnPromise = focusConstructWithBreadcrumb( data.section, control );
+					data.section.focus();
+					returnPromise.done( function() {
+						var values;
+						if ( 'publish' === data.setting.get().post_status ) {
+							values = control.getSettingValues().slice( 0 );
+							if ( ! control.params.select2_options.multiple ) {
+								values = [ data.postId ];
+							} else {
+								// @todo Really the add new buttons should be disabled when the limit is reached.
+								if ( control.params.select2_options.multiple && control.params.select2_options.limit >= values.length ) {
+									values.length = control.params.select2_options.limit - 1;
+								}
+								values.unshift( data.postId )
+							}
+							control.setSettingValues( values );
+						}
+						button.focus(); // @todo Focus on the select2?
+					} );
+				} );
+
+				promise.always( function() {
+					button.prop( 'disabled', false );
+				} );
+			} );
+
+			/**
+			 * Focus (expand) one construct and then focus on another construct after the first is collapsed.
+			 *
+			 * This overrides the back button to serve the purpose of breadcrumb navigation.
+			 * This is modified from WP Core.
+			 *
+			 * @link https://github.com/xwp/wordpress-develop/blob/e7bbb482d6069d9c2d0e33789c7d290ac231f056/src/wp-admin/js/customize-widgets.js#L2143-L2193
+			 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} focusConstruct - The object to initially focus.
+			 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} returnConstruct - The object to return focus.
+			 */
+			function focusConstructWithBreadcrumb( focusConstruct, returnConstruct ) {
+				var deferred = $.Deferred();
+				focusConstruct.focus();
+				function onceCollapsed( isExpanded ) {
+					if ( ! isExpanded ) {
+						focusConstruct.expanded.unbind( onceCollapsed );
+						returnConstruct.focus( {
+							completeCallback: function() {
+								deferred.resolve();
+							}
+						} );
+					}
+				}
+				focusConstruct.expanded.bind( onceCollapsed );
+				return deferred;
+			}
 		},
 
 		/**

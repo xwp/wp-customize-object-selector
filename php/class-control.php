@@ -74,15 +74,11 @@ class Control extends \WP_Customize_Control {
 				{{{ key }}}="{{ value }}"
 			<# } ) #>
 			/>
-		<# if ( data.show_addition_buttons && postTypes.length > 0 ) { #>
+		<# if ( ! _.isEmpty( data.post_addition_buttons ) ) { #>
 			<span class="add-new-post">
-				<# if ( 1 === postTypes.length ) { #>
-					<button type="button" class="button secondary-button">Add {{ postTypes[0] }}…</button>
-				<# } else { #>
-					<# _.each( postTypes, function( post_type ) { #>
-						<button type="button" class="button secondary-button">Add {{ post_type }}…</button>
-					<# } ) #>
-				<# } #>
+				<# _.each( data.post_addition_buttons, function( button ) { #>
+					<button type="button" class="button secondary-button add-new-post-button" data-post-type="{{ button.post_type }}">{{ button.label }}</button>
+				<# } ) #>
 			</span>
 		<# } #>
 		<div class="customize-control-notifications"></div>
