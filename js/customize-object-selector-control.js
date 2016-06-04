@@ -82,8 +82,8 @@
 		/**
 		 * Query posts.
 		 *
-		 * @param {object} queryVars
-		 * @returns {jQuery.promise}
+		 * @param {object} queryVars Query vars.
+		 * @returns {jQuery.promise} Promise.
 		 */
 		queryPosts: function( queryVars ) {
 			var control = this, action, data, postQueryArgs = {};
@@ -197,6 +197,7 @@
 		 * then the first value will be set, or 0 if empty.
 		 *
 		 * @param {Number[]} values IDs.
+		 * @returns {void}
 		 */
 		setSettingValues: function( values ) {
 			var control = this;
@@ -209,6 +210,8 @@
 
 		/**
 		 * Setup sortable.
+		 *
+		 * @returns {void}
 		 */
 		setupSortable: function() {
 			var control = this, ul;
@@ -287,6 +290,7 @@
 			 * @link https://github.com/xwp/wordpress-develop/blob/e7bbb482d6069d9c2d0e33789c7d290ac231f056/src/wp-admin/js/customize-widgets.js#L2143-L2193
 			 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} focusConstruct - The object to initially focus.
 			 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} returnConstruct - The object to return focus.
+			 * @returns {void}
 			 */
 			function focusConstructWithBreadcrumb( focusConstruct, returnConstruct ) {
 				var deferred = $.Deferred();
@@ -361,6 +365,8 @@
 		 * Override the embed() method to do nothing,
 		 * so that the control isn't embedded on load,
 		 * unless the containing section is already expanded.
+		 *
+		 * @returns {void}
 		 */
 		embed: function() {
 			var control = this,
@@ -386,6 +392,8 @@
 		 *
 		 * This function is called in Section.onChangeExpanded() so the control
 		 * will only get embedded when the Section is first expanded.
+		 *
+		 * @returns {void}
 		 */
 		actuallyEmbed: function() {
 			var control = this;
@@ -399,7 +407,8 @@
 		/**
 		 * This is not working with autofocus.
 		 *
-		 * @param args
+		 * @param {object} args Args.
+		 * @returns {void}
 		 */
 		focus: function( args ) {
 			var control = this;
