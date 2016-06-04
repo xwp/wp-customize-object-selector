@@ -93,7 +93,7 @@ class Plugin {
 		$handle = 'select2';
 		if ( ! $wp_styles->query( $handle, 'registered' ) ) {
 			$src = plugins_url( 'bower_components/select2/dist/css/select2' . $suffix, dirname( __FILE__ ) );
-			$deps = array();
+			$deps = array( 'jquery' );
 			$wp_styles->add( $handle, $src, $deps, $this->version );
 		}
 
