@@ -171,7 +171,7 @@ class Plugin {
 		}
 
 		// Currently this does not support nested meta_query.
-		if ( isset( $post_query_args['meta_query'] ) ) {
+		if ( isset( $post_query_args['meta_query'] ) && ! empty( $post_query_args['meta_query'] ) ) {
 			foreach ( $post_query_args['meta_query'] as $key => $val ) {
 				if ( 'relation' === $key ){
 					if ( 'AND' !== $val ){
