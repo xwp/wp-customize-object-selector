@@ -346,8 +346,7 @@
 					}
 					control.select2.empty();
 					_.each( data.results, function( item ) {
-						item.text = control.select2Template(item);
-						var option = new Option( item.text, item.id, true, true );
+						var option = new Option( control.select2Template( item ), item.id, true, true );
 						control.select2.append( option );
 					} );
 					control.select2.trigger( 'change' );
@@ -433,8 +432,15 @@
 		 * @returns {string}
 		 */
 		select2Template: function(data){
-			if ( data.hasOwnProperty( 'featured_image' ) && data.featured_image.hasOwnProperty( 'sizes' ) && data.featured_image.sizes.hasOwnProperty( 'thumbnail' ) && data.featured_image.sizes.thumbnail.hasOwnProperty( 'url' ) && ! _.isEmpty( data.featured_image.sizes.thumbnail.url ) ) {
-				return '<span><img width="20" height="20" src="' + data.featured_image.sizes.thumbnail.url + '" style="vertical-align:middle;"> ' + data.text + '</span>';
+			var thumbnail, dataSpan;
+			if ( data.featured_image && data.featured_image.sizes && data.featured_image.sizes.thumbnail && data.featured_image.sizes.thumbnail.url ) {
+				thumbnail = document.createElement( 'img' );
+				dataSpan = document.createElement( 'span' );
+				thumbnail.setAttribute( 'src', data.featured_image.sizes.thumbnail.url );
+				dataSpan.appendChild( thumbnail );
+				dataSpan.classList.add( 'select2-thumbnail-wrapper' );
+				dataSpan.innerHTML += ' ' + data.text;
+				return dataSpan.outerHTML;
 			} else {
 				return data.text;
 			}
