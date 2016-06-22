@@ -56,7 +56,7 @@
 					postTypes = args.params.post_query_args.post_type.split( /,/ );
 				}
 
-				postTypes = _.filter( postTypes, function ( postType ) {
+				postTypes = _.filter( postTypes, function( postType ) {
 					return ! _.isUndefined( api.Posts.data.postTypes[ postType ] ) && api.Posts.data.postTypes[ postType ].show_in_customizer;
 				} );
 
@@ -108,7 +108,7 @@
 			control.select2 = control.container.find( '.object-selector:first' ).select2( _.extend(
 				{
 					ajax: {
-						transport: function ( params, success, failure ) {
+						transport: function( params, success, failure ) {
 							var request = control.queryPosts({
 								s: params.data.term,
 								paged: params.data.page || 1
@@ -117,13 +117,13 @@
 							request.fail( failure );
 						}
 					},
-					templateResult: function ( data, container ) {
-						return control.select2Template(data);
+					templateResult: function( data ) {
+						return control.select2Template( data );
 					},
-					templateSelection: function ( data, container ) {
-						return control.select2Template(data);
+					templateSelection: function( data ) {
+						return control.select2Template( data );
 					},
-					escapeMarkup: function ( m ) {
+					escapeMarkup: function( m ) {
 						return m;
 					}
 				},
