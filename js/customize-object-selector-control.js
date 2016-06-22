@@ -116,6 +116,15 @@
 							request.done( success );
 							request.fail( failure );
 						}
+					},
+					templateResult: function ( data, container ) {
+						return control.select2Template(data);
+					},
+					templateSelection: function ( data, container ) {
+						return control.select2Template(data);
+					},
+					escapeMarkup: function ( m ) {
+						return m;
 					}
 				},
 				control.params.select2_options,
@@ -337,6 +346,7 @@
 					}
 					control.select2.empty();
 					_.each( data.results, function( item ) {
+						item.text = control.select2Template(item);
 						var option = new Option( item.text, item.id, true, true );
 						control.select2.append( option );
 					} );
@@ -414,6 +424,20 @@
 			var control = this;
 			control.actuallyEmbed();
 			api.Control.prototype.focus.call( control, args );
+		},
+
+		/**
+		 * Add featured image if select2 data is returning.
+		 *
+		 * @param {object} data post data.
+		 * @returns {string}
+		 */
+		select2Template: function(data){
+			if ( data.hasOwnProperty( 'featured_image' ) && data.featured_image.hasOwnProperty( 'sizes' ) && data.featured_image.sizes.hasOwnProperty( 'thumbnail' ) && data.featured_image.sizes.thumbnail.hasOwnProperty( 'url' ) && ! _.isEmpty( data.featured_image.sizes.thumbnail.url ) ) {
+				return '<span><img width="20" height="20" src="' + data.featured_image.sizes.thumbnail.url + '" style="vertical-align:middle;"> ' + data.text + '</span>';
+			} else {
+				return data.text;
+			}
 		}
 	});
 
