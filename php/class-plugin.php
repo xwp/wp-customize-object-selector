@@ -138,9 +138,24 @@ class Plugin {
 			's',
 			'paged',
 			'post__in',
+			'meta_key',
+			'meta_value',
+			'meta_query',
+			'meta_compare',
 			'orderby',
 			'order',
 		);
+
+		// White list allowed query vars.
+		$allowed_meta_query_vars = array(
+			'key',
+			'value',
+			'compare',
+		);
+
+		// White list allowed meta query compare values.
+		$allowed_meta_query_compare_values = array( '=', '!=', '>', '>=', '<', '<=' );
+
 		$extra_query_vars = array_diff( array_keys( $post_query_args ), $allowed_query_vars );
 		if ( ! empty( $extra_query_vars ) ) {
 			wp_send_json_error( array(
@@ -148,6 +163,41 @@ class Plugin {
 				'query_vars' => array_values( $extra_query_vars ),
 			) );
 		}
+		if ( ! empty( $post_query_args['meta_compare'] ) && ! in_array( $post_query_args['meta_compare'], $allowed_meta_query_compare_values ) ) {
+			wp_send_json_error( array(
+				'code' => 'disallowed_meta_compare_query_var',
+				'query_vars' => $post_query_args['meta_compare'],
+			) );
+		}
+
+		// Currently this does not support nested meta_query.
+		if ( isset( $post_query_args['meta_query'] ) && ! empty( $post_query_args['meta_query'] ) ) {
+			foreach ( $post_query_args['meta_query'] as $key => $val ) {
+				if ( 'relation' === $key ){
+					if ( 'AND' !== $val ){
+						wp_send_json_error( array(
+							'code'       => 'disallowed_meta_query_relation_var',
+							'query_vars' => array_values( $val ),
+						) );
+					}
+					continue;
+				}
+				$extra_meta_query_vars = array_diff( array_keys( $val ), $allowed_meta_query_vars );
+				if ( ! empty( $extra_meta_query_vars ) ) {
+					wp_send_json_error( array(
+						'code'       => 'disallowed_meta_query_var',
+						'query_vars' => array_values( $extra_meta_query_vars ),
+					) );
+				}
+				if ( ! empty( $val['compare'] ) && ! in_array( $val['compare'], $allowed_meta_query_compare_values ) ) {
+					wp_send_json_error( array(
+						'code'       => 'disallowed_meta_compare_query_var',
+						'query_vars' => $post_query_args['meta_query']['compare'],
+					) );
+				}
+			}
+		}
+
 		if ( empty( $post_query_args['paged'] ) ) {
 			$post_query_args['paged'] = 1;
 		}
