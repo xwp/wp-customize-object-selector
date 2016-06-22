@@ -429,7 +429,7 @@
 		 * Add featured image if select2 data is returning.
 		 *
 		 * @param {object} data post data.
-		 * @returns {string}
+		 * @returns {string} html markup or text
 		 */
 		select2Template: function(data){
 			var thumbnail, dataSpan;
