@@ -163,7 +163,7 @@ class Plugin {
 				'query_vars' => array_values( $extra_query_vars ),
 			) );
 		}
-		if ( ! empty( $post_query_args['meta_compare'] ) && ! in_array( $post_query_args['meta_compare'], $allowed_meta_query_compare_values ) ) {
+		if ( ! empty( $post_query_args['meta_compare'] ) && ! in_array( $post_query_args['meta_compare'], $allowed_meta_query_compare_values, true ) ) {
 			wp_send_json_error( array(
 				'code' => 'disallowed_meta_compare_query_var',
 				'query_vars' => $post_query_args['meta_compare'],
@@ -173,8 +173,8 @@ class Plugin {
 		// Currently this does not support nested meta_query.
 		if ( isset( $post_query_args['meta_query'] ) && ! empty( $post_query_args['meta_query'] ) ) {
 			foreach ( $post_query_args['meta_query'] as $key => $val ) {
-				if ( 'relation' === $key ){
-					if ( 'AND' !== $val ){
+				if ( 'relation' === $key ) {
+					if ( 'AND' !== $val ) {
 						wp_send_json_error( array(
 							'code'       => 'disallowed_meta_query_relation_var',
 							'query_vars' => array_values( $val ),
@@ -189,7 +189,7 @@ class Plugin {
 						'query_vars' => array_values( $extra_meta_query_vars ),
 					) );
 				}
-				if ( ! empty( $val['compare'] ) && ! in_array( $val['compare'], $allowed_meta_query_compare_values ) ) {
+				if ( ! empty( $val['compare'] ) && ! in_array( $val['compare'], $allowed_meta_query_compare_values, true ) ) {
 					wp_send_json_error( array(
 						'code'       => 'disallowed_meta_compare_query_var',
 						'query_vars' => $post_query_args['meta_query']['compare'],
