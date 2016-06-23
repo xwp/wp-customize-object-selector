@@ -1,4 +1,4 @@
-/* global wp */
+/* global wp, JSON */
 /* eslint consistent-this: [ "error", "control" ] */
 /* eslint no-magic-numbers: ["error", { "ignore": [0,1] }] */
 /* eslint complexity: ["error", 8] */
@@ -105,6 +105,8 @@
 		ready: function() {
 			var control = this;
 
+			control.select2Template = wp.template( 'customize-object-selector-item' );
+
 			control.select2 = control.container.find( '.object-selector:first' ).select2( _.extend(
 				{
 					ajax: {
@@ -124,6 +126,8 @@
 						return control.select2Template( data );
 					},
 					escapeMarkup: function( m ) {
+
+						// Do not escape HTML in the select options text.
 						return m;
 					}
 				},
@@ -423,27 +427,6 @@
 			var control = this;
 			control.actuallyEmbed();
 			api.Control.prototype.focus.call( control, args );
-		},
-
-		/**
-		 * Add featured image if select2 data is returning.
-		 *
-		 * @param {object} data post data.
-		 * @returns {string} html markup or text
-		 */
-		select2Template: function(data){
-			var thumbnail, dataSpan;
-			if ( data.featured_image && data.featured_image.sizes && data.featured_image.sizes.thumbnail && data.featured_image.sizes.thumbnail.url ) {
-				thumbnail = document.createElement( 'img' );
-				dataSpan = document.createElement( 'span' );
-				thumbnail.setAttribute( 'src', data.featured_image.sizes.thumbnail.url );
-				dataSpan.appendChild( thumbnail );
-				dataSpan.classList.add( 'select2-thumbnail-wrapper' );
-				dataSpan.innerHTML += ' ' + data.text;
-				return dataSpan.outerHTML;
-			} else {
-				return data.text;
-			}
 		}
 	});
 

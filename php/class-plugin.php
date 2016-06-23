@@ -45,6 +45,7 @@ class Plugin {
 		add_action( 'customize_register', array( $this, 'customize_register' ), 9 );
 
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customize_controls_enqueue_scripts' ) );
+		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
 		add_action( 'wp_ajax_' . static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, array( $this, 'handle_ajax_object_selector_query' ) );
 		add_filter( 'customize_refresh_nonces', array( $this, 'add_customize_object_selector_nonce' ) );
 	}
@@ -341,5 +342,23 @@ class Plugin {
 	public function add_customize_object_selector_nonce( $nonces ) {
 		$nonces[ static::OBJECT_SELECTOR_QUERY_AJAX_ACTION ] = wp_create_nonce( static::OBJECT_SELECTOR_QUERY_AJAX_ACTION );
 		return $nonces;
+	}
+
+	/**
+	 * Print templates.
+	 */
+	public function print_templates() {
+		?>
+		<script id="tmpl-customize-object-selector-item" type="text/html">
+			<# if ( data.featured_image && data.featured_image.sizes && data.featured_image.sizes.thumbnail && data.featured_image.sizes.thumbnail.url ) { #>
+				<span class="select2-thumbnail-wrapper">
+					<img src="{{ data.featured_image.sizes.thumbnail.url }}">
+					{{{ data.text }}}
+				</span>
+			<# } else { #>
+				{{{ data.text }}}
+			<# } #>
+		</script>
+		<?php
 	}
 }
