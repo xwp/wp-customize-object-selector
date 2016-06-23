@@ -1,4 +1,4 @@
-/* global wp */
+/* global wp, JSON */
 /* eslint consistent-this: [ "error", "control" ] */
 /* eslint no-magic-numbers: ["error", { "ignore": [0,1] }] */
 /* eslint complexity: ["error", 8] */
@@ -56,7 +56,7 @@
 					postTypes = args.params.post_query_args.post_type.split( /,/ );
 				}
 
-				postTypes = _.filter( postTypes, function ( postType ) {
+				postTypes = _.filter( postTypes, function( postType ) {
 					return ! _.isUndefined( api.Posts.data.postTypes[ postType ] ) && api.Posts.data.postTypes[ postType ].show_in_customizer;
 				} );
 
@@ -105,10 +105,12 @@
 		ready: function() {
 			var control = this;
 
+			control.select2Template = wp.template( 'customize-object-selector-item' );
+
 			control.select2 = control.container.find( '.object-selector:first' ).select2( _.extend(
 				{
 					ajax: {
-						transport: function ( params, success, failure ) {
+						transport: function( params, success, failure ) {
 							var request = control.queryPosts({
 								s: params.data.term,
 								paged: params.data.page || 1
@@ -116,6 +118,17 @@
 							request.done( success );
 							request.fail( failure );
 						}
+					},
+					templateResult: function( data ) {
+						return control.select2Template( data );
+					},
+					templateSelection: function( data ) {
+						return control.select2Template( data );
+					},
+					escapeMarkup: function( m ) {
+
+						// Do not escape HTML in the select options text.
+						return m;
 					}
 				},
 				control.params.select2_options,
@@ -337,7 +350,7 @@
 					}
 					control.select2.empty();
 					_.each( data.results, function( item ) {
-						var option = new Option( item.text, item.id, true, true );
+						var option = new Option( control.select2Template( item ), item.id, true, true );
 						control.select2.append( option );
 					} );
 					control.select2.trigger( 'change' );

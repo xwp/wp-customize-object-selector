@@ -45,6 +45,7 @@ class Plugin {
 		add_action( 'customize_register', array( $this, 'customize_register' ), 9 );
 
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customize_controls_enqueue_scripts' ) );
+		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
 		add_action( 'wp_ajax_' . static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, array( $this, 'handle_ajax_object_selector_query' ) );
 		add_filter( 'customize_refresh_nonces', array( $this, 'add_customize_object_selector_nonce' ) );
 	}
@@ -163,7 +164,7 @@ class Plugin {
 				'query_vars' => array_values( $extra_query_vars ),
 			) );
 		}
-		if ( ! empty( $post_query_args['meta_compare'] ) && ! in_array( $post_query_args['meta_compare'], $allowed_meta_query_compare_values ) ) {
+		if ( ! empty( $post_query_args['meta_compare'] ) && ! in_array( $post_query_args['meta_compare'], $allowed_meta_query_compare_values, true ) ) {
 			wp_send_json_error( array(
 				'code' => 'disallowed_meta_compare_query_var',
 				'query_vars' => $post_query_args['meta_compare'],
@@ -173,8 +174,8 @@ class Plugin {
 		// Currently this does not support nested meta_query.
 		if ( isset( $post_query_args['meta_query'] ) && ! empty( $post_query_args['meta_query'] ) ) {
 			foreach ( $post_query_args['meta_query'] as $key => $val ) {
-				if ( 'relation' === $key ){
-					if ( 'AND' !== $val ){
+				if ( 'relation' === $key ) {
+					if ( 'AND' !== $val ) {
 						wp_send_json_error( array(
 							'code'       => 'disallowed_meta_query_relation_var',
 							'query_vars' => array_values( $val ),
@@ -189,7 +190,7 @@ class Plugin {
 						'query_vars' => array_values( $extra_meta_query_vars ),
 					) );
 				}
-				if ( ! empty( $val['compare'] ) && ! in_array( $val['compare'], $allowed_meta_query_compare_values ) ) {
+				if ( ! empty( $val['compare'] ) && ! in_array( $val['compare'], $allowed_meta_query_compare_values, true ) ) {
 					wp_send_json_error( array(
 						'code'       => 'disallowed_meta_compare_query_var',
 						'query_vars' => $post_query_args['meta_query']['compare'],
@@ -341,5 +342,23 @@ class Plugin {
 	public function add_customize_object_selector_nonce( $nonces ) {
 		$nonces[ static::OBJECT_SELECTOR_QUERY_AJAX_ACTION ] = wp_create_nonce( static::OBJECT_SELECTOR_QUERY_AJAX_ACTION );
 		return $nonces;
+	}
+
+	/**
+	 * Print templates.
+	 */
+	public function print_templates() {
+		?>
+		<script id="tmpl-customize-object-selector-item" type="text/html">
+			<# if ( data.featured_image && data.featured_image.sizes && data.featured_image.sizes.thumbnail && data.featured_image.sizes.thumbnail.url ) { #>
+				<span class="select2-thumbnail-wrapper">
+					<img src="{{ data.featured_image.sizes.thumbnail.url }}">
+					{{{ data.text }}}
+				</span>
+			<# } else { #>
+				{{{ data.text }}}
+			<# } #>
+		</script>
+		<?php
 	}
 }
