@@ -171,7 +171,7 @@
 						control.populateSelectOptions( true );
 					}
 				}
-			};
+			}
 			api.bind( 'change', watchForChangedSettings );
 
 			// Clean up.
