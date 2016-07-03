@@ -345,6 +345,7 @@
 		/**
 		 * Re-populate the select options based on the current setting value.
 		 *
+		 * @param {boolean} refresh Whether to force the refreshing of the options.
 		 * @returns {jQuery.promise} Resolves when complete. Rejected when failed.
 		 */
 		populateSelectOptions: function( refresh ) {
