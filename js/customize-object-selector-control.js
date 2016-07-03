@@ -164,10 +164,11 @@
 
 			// Add listener for changes to settings that are in this control.
 			function watchForChangedSettings( changedSetting ) {
-				var ids = control.setting.get();
-				var matches = changedSetting.id.match( /^post\[.+]\[(\d+)]/ );
+				var postId, value = control.setting.get();
+				var matches = changedSetting.id.match( /^post\[[^\]]+]\[(\d+)]/ );
 				if ( matches ) {
-					if ( ( _.isArray( ids ) && $.inArray( matches[1], ids ) ) || matches[1] === ids ) {
+					postId = parseInt( matches[1], 10 );
+					if ( _.isArray( value ) ? $.inArray( postId, value ) : postId === value ) {
 						control.populateSelectOptions( true );
 					}
 				}
