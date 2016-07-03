@@ -2,7 +2,7 @@
 	z-index: 1000000;
 }
 .select2-thumbnail-wrapper img{
-	height: 20px;
-	width: 20px;
+	height: 32px;
+	width: auto;
 	vertical-align: middle;
 }
