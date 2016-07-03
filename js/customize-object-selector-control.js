@@ -161,6 +161,26 @@
 			control.setupAddNewButtons();
 
 			api.Control.prototype.ready.call( control );
+
+			// Add listener for changes to settings that are in this control.
+			function watchForChangedSettings( changedSetting ) {
+				var postId, value = control.setting.get();
+				var matches = changedSetting.id.match( /^post\[[^\]]+]\[(\d+)]/ );
+				if ( matches ) {
+					postId = parseInt( matches[1], 10 );
+					if ( _.isArray( value ) ? $.inArray( postId, value ) : postId === value ) {
+						control.populateSelectOptions( true );
+					}
+				}
+			}
+			api.bind( 'change', watchForChangedSettings );
+
+			// Clean up.
+			api.control.bind( 'remove', function( removedControl ) {
+				if ( removedControl.id === control.id ) {
+					wp.customize.unbind( 'change', watchForChangedSettings );
+				}
+			} );
 		},
 
 		/**
@@ -326,14 +346,15 @@
 		/**
 		 * Re-populate the select options based on the current setting value.
 		 *
+		 * @param {boolean} refresh Whether to force the refreshing of the options.
 		 * @returns {jQuery.promise} Resolves when complete. Rejected when failed.
 		 */
-		populateSelectOptions: function() {
+		populateSelectOptions: function( refresh ) {
 			var control = this, request, settingValues, selectedValues, deferred = jQuery.Deferred();
 
 			settingValues = control.getSettingValues();
 			selectedValues = control.getSelectedValues();
-			if ( _.isEqual( selectedValues, settingValues ) ) {
+			if ( ! refresh && _.isEqual( selectedValues, settingValues ) ) {
 				deferred.resolve();
 			} else if ( 0 === settingValues.length ) {
 				control.select2.empty();
