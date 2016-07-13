@@ -1,14 +1,15 @@
 <?php
 /**
  * Plugin Name: Customize Object Selector
- * Version: 0.2-alpha
- * Description: Adds a Customizer control to select posts (and eventually terms and users).
- * Author: Daniel Bachhuber (<a href="https://handbuilt.co">Hand Built</a>), Weston Ruter (<a href="https://make.xwp.co/">XWP</a>)
+ * Version: 0.2
+ * Description: Adds a Customizer control to select posts (and eventually terms and users). Forked from Daniel Bachhuber's <a href="https://github.com/danielbachhuber/customizer-ajax-select">Customizer Ajax Select</a>.
+ * Author: XWP
  * Plugin URI: https://github.com/xwp/wp-customize-object-selector
  * Text Domain: customize-object-selector
  * Domain Path: /languages
  *
- * Copyright (c) 2016 Hand Built (https://handbuilt.co), XWP (https://make.xwp.co/)
+ * Copyright 2016 (c) XWP (https://make.xwp.co)
+ * Copyright 2015 (c) Hand Built (https://handbuilt.co)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 or, at
