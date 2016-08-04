@@ -270,14 +270,14 @@ class Plugin {
 			}
 		}
 
-		$include_featured_images = ! empty( $post_query_args['include_featured_images'] );
+		$include_featured_images = empty( $post_query_args['include_featured_images'] ) ? false : $post_query_args['include_featured_images'];
 
 		$query = new \WP_Query( array_merge(
 			array(
 				'post_status' => 'publish',
 				'post_type' => array( 'post' ),
 				'ignore_sticky_posts' => true,
-				'update_post_meta_cache' => $include_featured_images,
+				'update_post_meta_cache' => ( false !== $include_featured_images ),
 				'update_post_term_cache' => false,
 				'no_found_rows' => false,
 			),
@@ -313,7 +313,7 @@ class Plugin {
 					'post_author' => $post->post_author,
 				);
 				if ( $include_featured_images ) {
-					$attachment_id = get_post_thumbnail_id( $post->ID );
+					$attachment_id = get_post_meta( $post->ID, $include_featured_images, true ) ?: get_post_thumbnail_id( $post->ID );
 					if ( $attachment_id ) {
 						$result['featured_image'] = wp_prepare_attachment_for_js( $attachment_id );
 					} else {
