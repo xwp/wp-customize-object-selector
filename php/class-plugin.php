@@ -319,7 +319,7 @@ class Plugin {
 					 * Filters the featured image attachment ID for a given post.
 					 *
 					 * @param int|bool $attachment_id Attachment ID or `false`.
-					 * @param \WP_Post $post Post.
+					 * @param \WP_Post $post Post object.
 					 */
 					$attachment_id = apply_filters( 'customize_object_selector_attachment_id', $attachment_id, $post );
 
