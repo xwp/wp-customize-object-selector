@@ -37,6 +37,14 @@ class Control extends \WP_Customize_Control {
 	public $post_query_args;
 
 	/**
+	 * Enqueue control related scripts/styles.
+	 */
+	public function enqueue() {
+		wp_enqueue_script( 'customize-object-selector-control' );
+		wp_enqueue_style( 'customize-object-selector-control' );
+	}
+
+	/**
 	 * An Underscore (JS) template for this control's content (but not its container).
 	 *
 	 * Class variables for this control class are available in the `data` JS object;

@@ -44,7 +44,6 @@ class Plugin {
 
 		add_action( 'customize_register', array( $this, 'customize_register' ), 9 );
 
-		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customize_controls_enqueue_scripts' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
 		add_action( 'wp_ajax_' . static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, array( $this, 'handle_ajax_object_selector_query' ) );
 		add_filter( 'customize_refresh_nonces', array( $this, 'add_customize_object_selector_nonce' ) );
@@ -102,14 +101,6 @@ class Plugin {
 		$src = plugins_url( 'css/customize-object-selector-control.css', dirname( __FILE__ ) );
 		$deps = array( 'customize-controls', 'select2' );
 		$wp_styles->add( $handle, $src, $deps, $this->version );
-	}
-
-	/**
-	 * Enqueue controls scripts.
-	 */
-	public function customize_controls_enqueue_scripts() {
-		wp_enqueue_script( 'customize-object-selector-control' );
-		wp_enqueue_style( 'customize-object-selector-control' );
 	}
 
 	/**
