@@ -1,6 +1,8 @@
 .DS_Store
 /node_modules
 
+*.min.js
+*.min.css
 /bower_components/select2/*
 !/bower_components/select2/dist
 /bower_components/select2/dist/js/*.js
