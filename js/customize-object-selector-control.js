@@ -114,7 +114,7 @@
 		 * @inheritdoc
 		 */
 		ready: function() {
-			var control = this, itemTemplate, model;
+			var control = this, itemTemplate, model, selectorContainer;
 
 			// Set up the Value that the selector will sync with.
 			if ( control.params.setting_property ) {
@@ -134,7 +134,20 @@
 				select2_selection_template: itemTemplate
 			});
 
-			control.objectSelector.embed( control.container.find( '.customize-object-selector-container' ) );
+			selectorContainer = control.container.find( '.customize-object-selector-container' );
+			control.objectSelector.embed( selectorContainer );
+
+			/*
+			 * Prevent escape key from causing the current section to collapse.
+			 * Stopping propagation prevents the body keydown handler from being reached:
+			 * https://github.com/xwp/wordpress-develop/blob/4.6.0/src/wp-admin/js/customize-controls.js#L3971-L4007
+			 */
+			control.objectSelector.select.data( 'select2' ).on( 'keypress', function stopEscKeypressPropagation( event ) {
+				var escapeKey = 27;
+				if ( escapeKey === event.which ) {
+					event.stopPropagation();
+				}
+			} );
 
 			api.Control.prototype.ready.call( control );
 
