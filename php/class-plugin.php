@@ -145,6 +145,7 @@ class Plugin {
 			's',
 			'paged',
 			'post__in',
+			'post__not_in',
 			'meta_key',
 			'meta_value',
 			'meta_query',
