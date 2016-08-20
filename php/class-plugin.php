@@ -303,6 +303,7 @@ class Plugin {
 				$result = array(
 					'id' => $post->ID,
 					'text' => $text,
+					'title' => $title, // Option tooltip.
 					'post_title' => $title,
 					'post_type' => $post->post_type,
 					'post_status' => $post->post_status,

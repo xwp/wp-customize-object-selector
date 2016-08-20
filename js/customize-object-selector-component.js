@@ -422,6 +422,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 					component.select2.empty();
 					_.each( data.results, function( item ) {
 						var option = new Option( component.select2_result_template( item ), item.id, true, true );
+						option.title = item.title;
 						component.select2.append( option );
 					} );
 					component.select2.trigger( 'change' );
