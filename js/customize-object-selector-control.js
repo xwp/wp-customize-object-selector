@@ -23,11 +23,15 @@
 			args.params = _.extend(
 				{
 					select2_options: {},
-					post_query_args: null,
+					post_query_vars: null,
 					setting_property: null // To sync with the property of a given setting (e.g. value.post_parent)
 				},
 				args.params || {}
 			);
+			if ( args.params.post_query_args && ! args.params.post_query_vars ) {
+				console.warn( '[customize-object-selector-control] The post_query_args arg is deprecated in favor of post_query_vars.' );
+				args.params.post_query_vars = args.params.post_query_args;
+			}
 
 			args.params.select2_options = _.extend(
 				{
