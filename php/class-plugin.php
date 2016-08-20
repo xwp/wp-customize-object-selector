@@ -103,8 +103,8 @@ class Plugin {
 			$wp_styles->add( $handle, $src, $deps, $this->version );
 		}
 
-		$handle = 'customize-object-selector-control';
-		$src = plugins_url( 'css/customize-object-selector-control' . $suffix, dirname( __FILE__ ) );
+		$handle = 'customize-object-selector';
+		$src = plugins_url( 'css/customize-object-selector' . $suffix, dirname( __FILE__ ) );
 		$deps = array( 'customize-controls', 'select2' );
 		$wp_styles->add( $handle, $src, $deps, $this->version );
 	}

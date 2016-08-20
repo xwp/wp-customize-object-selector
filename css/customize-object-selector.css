@@ -1,7 +1,7 @@
 .select2-container {
 	z-index: 1000000;
 }
-.select2-thumbnail-wrapper img{
+.select2-thumbnail-wrapper img {
 	height: 32px;
 	width: auto;
 	vertical-align: middle;
