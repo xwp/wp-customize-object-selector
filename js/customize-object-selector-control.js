@@ -107,6 +107,10 @@
 				control.objectSelector.destroy();
 				api.control.unbind( 'remove', control.handleRemoval );
 				control.container.remove();
+
+				if ( control.section() && api.section( control.section() ) ) {
+					api.section( control.section() ).expanded.unbind( control.closeDropdownUponSectionClose );
+				}
 			}
 		},
 
@@ -149,6 +153,13 @@
 				}
 			} );
 
+			control.closeDropdownUponSectionClose = _.bind( control.closeDropdownUponSectionClose, control );
+			if ( control.section() ) {
+				api.section( control.section(), function( section ) {
+					section.expanded.bind( control.closeDropdownUponSectionClose );
+				} );
+			}
+
 			api.Control.prototype.ready.call( control );
 
 			api.control.bind( 'remove', function( removedControl ) {
@@ -156,6 +167,19 @@
 					control.objectSelector.destroy();
 				}
 			} );
+		},
+
+		/**
+		 * Close a select2 when its section is closed.
+		 *
+		 * @param {bool} sectionExpanded Expanded.
+		 * @returns {void}
+		 */
+		closeDropdownUponSectionClose: function( sectionExpanded ) {
+			var control = this;
+			if ( ! sectionExpanded && control.objectSelector && control.objectSelector.select ) {
+				control.objectSelector.select.select2( 'close' );
+			}
 		},
 
 		/**
