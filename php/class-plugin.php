@@ -322,6 +322,15 @@ class Plugin {
 				);
 				if ( $include_featured_images ) {
 					$attachment_id = get_post_thumbnail_id( $post->ID );
+
+					/**
+					 * Filters the featured image attachment ID for a given post.
+					 *
+					 * @param int|bool $attachment_id Attachment ID or `false`.
+					 * @param \WP_Post $post Post object.
+					 */
+					$attachment_id = apply_filters( 'customize_object_selector_attachment_id', $attachment_id, $post );
+
 					if ( $attachment_id ) {
 						$result['featured_image'] = wp_prepare_attachment_for_js( $attachment_id );
 					} else {
