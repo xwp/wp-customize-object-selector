@@ -72,7 +72,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			component.container.empty().append( component.control_template( templateData ) );
 
 			component.select = component.container.find( 'select:first' );
-			component.select2 = component.select.select2( _.extend(
+			component.select.select2( _.extend(
 				{
 					ajax: {
 						transport: function( params, success, failure ) {
@@ -103,11 +103,11 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			) );
 
 			component.populateSelectOptions().done( function() {
-				component.select2.prop( 'disabled', false );
+				component.select.prop( 'disabled', false );
 			} );
 
 			// Sync the select2 values with the setting values.
-			component.select2.on( 'change', function() {
+			component.select.on( 'change', function() {
 				component.setSettingValues( _.map(
 					component.getSelectedValues(),
 					function( value ) {
@@ -234,7 +234,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 */
 		getSelectedValues: function() {
 			var component = this, selectValues;
-			selectValues = component.select2.val();
+			selectValues = component.select.val();
 			if ( _.isEmpty( selectValues ) ) {
 				selectValues = [];
 			} else if ( ! _.isArray( selectValues ) ) {
@@ -296,7 +296,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				return;
 			}
 
-			ul = component.select2.next( '.select2-container' ).first( 'ul.select2-selection__rendered' );
+			ul = component.select.next( '.select2-container' ).first( 'ul.select2-selection__rendered' );
 			ul.sortable({
 				placeholder: 'ui-state-highlight',
 				forcePlaceholderSize: true,
@@ -308,8 +308,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 						var id, option;
 						id = parseInt( $( this ).data( 'data' ).id, 10 );
 						selectedValues.push( id );
-						option = component.select2.find( 'option[value="' + id + '"]' );
-						component.select2.append( option );
+						option = component.select.find( 'option[value="' + id + '"]' );
+						component.select.append( option );
 					});
 					component.setSettingValues( selectedValues );
 				}
@@ -407,8 +407,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			if ( ! refresh && _.isEqual( selectedValues, settingValues ) ) {
 				deferred.resolve();
 			} else if ( 0 === settingValues.length ) {
-				component.select2.empty();
-				component.select2.trigger( 'change' );
+				component.select.empty();
+				component.select.trigger( 'change' );
 				deferred.resolve();
 			} else {
 				request = component.queryPosts({
@@ -419,13 +419,13 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 					if ( component.notifications ) {
 						component.notifications.remove( 'select2_init_failure' );
 					}
-					component.select2.empty();
+					component.select.empty();
 					_.each( data.results, function( item ) {
 						var option = new Option( component.select2_result_template( item ), item.id, true, true );
 						option.title = item.title;
-						component.select2.append( option );
+						component.select.append( option );
 					} );
-					component.select2.trigger( 'change' );
+					component.select.trigger( 'change' );
 					deferred.resolve();
 				} );
 				request.fail( function() {
