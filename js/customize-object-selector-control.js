@@ -1,4 +1,4 @@
-/* global wp, jQuery */
+/* global wp, jQuery, console */
 /* eslint consistent-this: [ "error", "control" ] */
 /* eslint no-magic-numbers: ["error", { "ignore": [0,1] }] */
 /* eslint complexity: ["error", 8] */
@@ -29,7 +29,9 @@
 				args.params || {}
 			);
 			if ( args.params.post_query_args && ! args.params.post_query_vars ) {
-				console.warn( '[customize-object-selector-control] The post_query_args arg is deprecated in favor of post_query_vars.' );
+				if ( 'undefined' !== typeof console ) {
+					console.warn( '[customize-object-selector-control] The post_query_args arg is deprecated in favor of post_query_vars.' );
+				}
 				args.params.post_query_vars = args.params.post_query_args;
 			}
 
@@ -116,7 +118,7 @@
 
 			// Set up the Value that the selector will sync with.
 			if ( control.params.setting_property ) {
-				model = control.createSyncedPropertyValue( control.setting, args.params.setting_property );
+				model = control.createSyncedPropertyValue( control.setting, control.params.setting_property );
 			} else {
 				model = control.setting;
 			}
