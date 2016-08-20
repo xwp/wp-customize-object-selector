@@ -52,7 +52,7 @@
 				args.params.content.attr( 'id', 'customize-control-' + id.replace( /]/g, '' ).replace( /\[/g, '-' ) );
 				args.params.content.attr( 'class', 'customize-control customize-control-' + args.params.type );
 			}
-			args.params.select_id = control.id + String( Math.random() );
+			args.params.select_id = id + String( Math.random() );
 
 			api.Control.prototype.initialize.call( control, id, args );
 
