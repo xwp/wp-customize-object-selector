@@ -16,7 +16,7 @@
 	api.ObjectSelectorControl = api.Control.extend({
 
 		initialize: function( id, options ) {
-			var control = this, args, itemTemplate, model;
+			var control = this, args;
 
 			args = options || {};
 
@@ -51,23 +51,6 @@
 				args.params.content.attr( 'class', 'customize-control customize-control-' + args.params.type );
 			}
 			args.params.select_id = control.id + String( Math.random() );
-
-			// Set up the Value that the selector will sync with.
-			if ( control.params.setting_property ) {
-				model = control.createSyncedPropertyValue( control.setting, control.params.setting_property );
-			} else {
-				model = control.setting;
-			}
-
-			itemTemplate = wp.template( 'customize-object-selector-item' );
-			control.objectSelector = new api.ObjectSelectorComponent({
-				model: model,
-				post_query_vars: control.params.post_query_vars,
-				select_id: control.params.select_id,
-				select2_options: control.params.select2_options,
-				select2_result_template: itemTemplate,
-				select2_selection_template: itemTemplate
-			});
 
 			api.Control.prototype.initialize.call( control, id, args );
 
@@ -129,7 +112,25 @@
 		 * @inheritdoc
 		 */
 		ready: function() {
-			var control = this;
+			var control = this, itemTemplate, model;
+
+			// Set up the Value that the selector will sync with.
+			if ( control.params.setting_property ) {
+				model = control.createSyncedPropertyValue( control.setting, args.params.setting_property );
+			} else {
+				model = control.setting;
+			}
+
+			itemTemplate = wp.template( 'customize-object-selector-item' );
+			control.objectSelector = new api.ObjectSelectorComponent({
+				model: model,
+				containing_construct: control,
+				post_query_vars: control.params.post_query_vars,
+				select_id: control.params.select_id,
+				select2_options: control.params.select2_options,
+				select2_result_template: itemTemplate,
+				select2_selection_template: itemTemplate
+			});
 
 			control.objectSelector.embed( control.container.find( '.customize-object-selector-container' ) );
 
