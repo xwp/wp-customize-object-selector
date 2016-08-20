@@ -75,9 +75,15 @@ class Plugin {
 			$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 		}
 
+		$handle = 'customize-object-selector-component';
+		$src = plugins_url( 'js/customize-object-selector-component.js', dirname( __FILE__ ) );
+		$deps = array( 'jquery', 'select2', 'customize-base', 'jquery-ui-sortable' );
+		$in_footer = 1;
+		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
+
 		$handle = 'customize-object-selector-control';
 		$src = plugins_url( 'js/customize-object-selector-control.js', dirname( __FILE__ ) );
-		$deps = array( 'jquery', 'select2', 'customize-controls', 'jquery-ui-sortable' );
+		$deps = array( 'customize-controls', 'customize-object-selector-component' );
 		$in_footer = 1;
 		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 	}
@@ -98,7 +104,7 @@ class Plugin {
 		}
 
 		$handle = 'customize-object-selector-control';
-		$src = plugins_url( 'css/customize-object-selector-control.css', dirname( __FILE__ ) );
+		$src = plugins_url( 'css/customize-object-selector-control' . $suffix, dirname( __FILE__ ) );
 		$deps = array( 'customize-controls', 'select2' );
 		$wp_styles->add( $handle, $src, $deps, $this->version );
 	}
@@ -340,6 +346,25 @@ class Plugin {
 	 */
 	public function print_templates() {
 		?>
+		<script id="tmpl-customize-object-selector-component" type="text/html">
+			<select id="{{ data.select_id }}"
+				<# if ( data.multiple ) { #>
+					multiple="multiple"
+				<# } #>
+				>
+			</select>
+
+			<# if ( ! _.isEmpty( data.addable_post_types ) ) { #>
+				<span class="add-new-post">
+					<# _.each( data.addable_post_types, function( addable_post_type ) { #>
+						<button type="button" class="button secondary-button add-new-post-button" data-post-type="{{ addable_post_type.post_type }}">
+							{{ addable_post_type.add_button_label }}
+						</button>
+					<# } ) #>
+				</span>
+			<# } #>
+		</script>
+
 		<script id="tmpl-customize-object-selector-item" type="text/html">
 			<# if ( data.featured_image && data.featured_image.sizes && data.featured_image.sizes.thumbnail && data.featured_image.sizes.thumbnail.url ) { #>
 				<span class="select2-thumbnail-wrapper">
