@@ -158,7 +158,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				return [];
 			}
 
-			if ( ! component.post_query_vars.post_type ) {
+			if ( ! component.post_query_vars || ! component.post_query_vars.post_type ) {
 				postTypes = [ 'post' ];
 			} else if ( _.isArray( component.post_query_vars.post_type ) ) {
 				postTypes = component.post_query_vars.post_type;
