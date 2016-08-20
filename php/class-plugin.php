@@ -77,13 +77,13 @@ class Plugin {
 		}
 
 		$handle = 'customize-object-selector-component';
-		$src = plugins_url( 'js/customize-object-selector-component.js', dirname( __FILE__ ) );
+		$src = plugins_url( 'js/customize-object-selector-component' . $suffix, dirname( __FILE__ ) );
 		$deps = array( 'jquery', 'select2', 'customize-base', 'jquery-ui-sortable' );
 		$in_footer = 1;
 		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 
 		$handle = 'customize-object-selector-control';
-		$src = plugins_url( 'js/customize-object-selector-control.js', dirname( __FILE__ ) );
+		$src = plugins_url( 'js/customize-object-selector-control' . $suffix, dirname( __FILE__ ) );
 		$deps = array( 'customize-controls', 'customize-object-selector-component' );
 		$in_footer = 1;
 		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
