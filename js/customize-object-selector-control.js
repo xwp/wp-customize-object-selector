@@ -153,6 +153,13 @@
 				}
 			} );
 
+			// @todo For some reason tab focus is not working as expected with non-multiple select2s. The following is a workaround.
+			if ( ! control.params.select2_options.multiple ) {
+				control.objectSelector.select.on( 'select2:close', function() {
+					control.objectSelector.select.focus();
+				} );
+			}
+
 			control.closeDropdownUponSectionClose = _.bind( control.closeDropdownUponSectionClose, control );
 			if ( control.section() ) {
 				api.section( control.section(), function( section ) {
