@@ -19,6 +19,41 @@ module.exports = function( grunt ) {
 			]
 		},
 
+		// Minify .js files.
+		uglify: {
+			options: {
+				preserveComments: false
+			},
+			core: {
+				files: [ {
+					expand: true,
+					cwd: 'js/',
+					src: [
+						'*.js',
+						'!*.min.js'
+					],
+					dest: 'js/',
+					ext: '.min.js'
+				} ]
+			}
+		},
+
+		// Minify .css files.
+		cssmin: {
+			core: {
+				files: [ {
+					expand: true,
+					cwd: 'css/',
+					src: [
+						'*.css',
+						'!*.min.css'
+					],
+					dest: 'css/',
+					ext: '.min.css'
+				} ]
+			}
+		},
+
 		// Build a deploy-able plugin
 		copy: {
 			build: {
@@ -85,13 +120,15 @@ module.exports = function( grunt ) {
 	// Load tasks
 	grunt.loadNpmTasks( 'grunt-contrib-clean' );
 	grunt.loadNpmTasks( 'grunt-contrib-copy' );
+	grunt.loadNpmTasks( 'grunt-contrib-cssmin' );
 	grunt.loadNpmTasks( 'grunt-contrib-jshint' );
+	grunt.loadNpmTasks( 'grunt-contrib-uglify' );
 	grunt.loadNpmTasks( 'grunt-shell' );
 	grunt.loadNpmTasks( 'grunt-wp-deploy' );
 
 	// Register tasks
 	grunt.registerTask( 'default', [
-		'jshint'
+		'build'
 	] );
 
 	grunt.registerTask( 'readme', [
@@ -112,7 +149,9 @@ module.exports = function( grunt ) {
 	] );
 
 	grunt.registerTask( 'build', [
-		'default',
+		'jshint',
+		'uglify',
+		'cssmin',
 		'readme',
 		'copy'
 	] );
