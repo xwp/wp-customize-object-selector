@@ -27,7 +27,11 @@ class Control extends \WP_Customize_Control {
 	 *
 	 * @var array
 	 */
-	public $select2_options;
+	public $select2_options = array(
+		'multiple' => false,
+		'cache' => false,
+		'width' => '100%',
+	);
 
 	/**
 	 * Query args for posts.
@@ -35,6 +39,26 @@ class Control extends \WP_Customize_Control {
 	 * @var array|null
 	 */
 	public $post_query_args;
+
+	/**
+	 * Setting property.
+	 *
+	 * If defined, the associated setting is assumed to be an object (e.g. a post)
+	 * and this identifies a property of that setting value. When defined, changes
+	 * to the selector component will update the defined property of the setting
+	 * as opposed to setting the root value of the setting.
+	 *
+	 * @var string
+	 */
+	public $setting_property;
+
+	/**
+	 * Enqueue control related scripts/styles.
+	 */
+	public function enqueue() {
+		wp_enqueue_script( 'customize-object-selector-control' );
+		wp_enqueue_style( 'customize-object-selector-control' );
+	}
 
 	/**
 	 * An Underscore (JS) template for this control's content (but not its container).
@@ -45,42 +69,12 @@ class Control extends \WP_Customize_Control {
 	 * @see WP_Customize_Control::print_template()
 	 */
 	protected function content_template() {
-		$data = $this->json();
-		if ( ! isset( $data['input_attrs'] ) ) {
-			$data['input_attrs'] = array();
-		}
-		if ( ! isset( $data['input_attrs']['class'] ) ) {
-			$data['input_attrs']['class'] = '';
-		}
 		?>
-		<#
-		var postTypes = [];
-		_.defaults( data, <?php echo wp_json_encode( $data ) ?> );
-		data.input_id = 'input-' + String( Math.random() );
-		data.input_attrs['class'] += ' object-selector';
-		if ( data.select2_options.multiple ) {
-			data.input_attrs['multiple'] = '';
-		}
-		if ( data.post_query_args.post_type ) {
-			postTypes = _.isArray( data.post_query_args.post_type ) ? data.post_query_args.post_type : [ data.post_query_args.post_type ];
-		}
-		#>
-		<span class="customize-control-title"><label for="{{ data.input_id }}">{{ data.label }}</label></span>
+		<span class="customize-control-title"><label for="{{ data.select_id }}">{{ data.label }}</label></span>
 		<# if ( data.description ) { #>
 			<span class="description customize-control-description">{{ data.description }}</span>
 		<# } #>
-		<select id="{{ data.input_id }}"
-			<# _.each( data.input_attrs, function( value, key ) { #>
-				{{{ key }}}="{{ value }}"
-			<# } ) #>
-			/>
-		<# if ( ! _.isEmpty( data.post_addition_buttons ) ) { #>
-			<span class="add-new-post">
-				<# _.each( data.post_addition_buttons, function( button ) { #>
-					<button type="button" class="button secondary-button add-new-post-button" data-post-type="{{ button.post_type }}">{{ button.label }}</button>
-				<# } ) #>
-			</span>
-		<# } #>
+		<div class="customize-object-selector-container"></div>
 		<div class="customize-control-notifications"></div>
 		<?php
 	}
@@ -101,6 +95,7 @@ class Control extends \WP_Customize_Control {
 			wp_array_slice_assoc( get_object_vars( $this ), array(
 				'select2_options',
 				'post_query_args',
+				'setting_property',
 			) )
 		);
 	}
