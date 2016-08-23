@@ -61,6 +61,7 @@ module.exports = function( grunt ) {
 					'*.php',
 					'php/*.php',
 					'js/*.js',
+					'css/*.css',
 					'bower_components/select2/dist/js/select2.full.js',
 					'bower_components/select2/dist/js/select2.full.min.js',
 					'bower_components/select2/dist/css/select2.css',
