@@ -183,9 +183,10 @@
 		 * @returns {void}
 		 */
 		closeDropdownUponSectionClose: function( sectionExpanded ) {
-			var control = this;
-			if ( ! sectionExpanded && control.objectSelector && control.objectSelector.select ) {
-				control.objectSelector.select.select2( 'close' );
+			var control = this,
+				select = control.objectSelector ? control.objectSelector.select : false;
+			if ( ! sectionExpanded && select && select.data( 'select2' ) ) {
+				select.select2( 'close' );
 			}
 		},
 
