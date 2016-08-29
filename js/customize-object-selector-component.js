@@ -125,6 +125,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			component.setupAddNewButtons();
 
+			component.setupEditLinks();
+
 			component.repopulateSelectOptionsForSettingChange = _.bind( component.repopulateSelectOptionsForSettingChange, component );
 			api.bind( 'change', component.repopulateSelectOptionsForSettingChange );
 		},
@@ -361,6 +363,43 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 				promise.always( function() {
 					button.prop( 'disabled', false );
+				} );
+			} );
+		},
+
+		setupEditLinks: function setupEditLinks() {
+			var component = this;
+
+			// Set up the add new post buttons
+			component.container.on( 'click', '.edit-post-link', function() {
+				var ensuredPromise, link, returnPromise, postId;
+				link = $( this );
+				postId = $( this ).data( 'postId' );
+
+				ensuredPromise = api.Posts.ensurePosts( [ 711 ] );
+				ensuredPromise.done( function( postsData ) {
+					var postData = postsData[ 711 ];
+					if ( postData ) {
+						returnPromise = component.focusConstructWithBreadcrumb( postData.section, component.containing_construct );
+						returnPromise.done( function() {
+							/*var values;
+							 if ( 'publish' === data.setting.get().post_status ) {
+							 values = component.getSettingValues().slice( 0 );
+							 if ( ! component.select2_options.multiple ) {
+							 values = [ data.postId ];
+							 } else {
+
+							 // @todo Really the add new buttons should be disabled when the limit is reached.
+							 if ( component.select2_options.multiple && component.select2_options.limit >= values.length ) {
+							 values.length = component.select2_options.limit - 1;
+							 }
+							 values.unshift( data.postId );
+							 }
+							 component.setSettingValues( values );
+							 }*/
+							link.focus(); // @todo Focus on the select2?
+						} );
+					}
 				} );
 			} );
 		},
