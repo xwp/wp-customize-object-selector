@@ -391,10 +391,10 @@ class Plugin {
 					<img src="{{ data.featured_image.sizes.thumbnail.url }}">
 					{{{ data.text }}}
 				</span>
-			<# } else if ( data.disable_edit_from_select2 ) { #>
+			<# } else if ( data.disable_edit ) { #>
 				{{{ data.text }}}
 			<# } else { #>
-				<a class="edit-post-link" data-post-id="{{ data.editable_post_id }}">
+				<a class="edit-post-link" data-post-id="{{ data.id }}">
 					{{{ data.text }}}
 				</a>
 			<# } #>
