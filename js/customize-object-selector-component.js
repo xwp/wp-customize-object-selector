@@ -381,16 +381,26 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			component.container.on( 'click', '.edit-post-link', function() {
 				var ensuredPromise, returnPromise, postId;
 
+				component.select.prop( 'disabled', true );
 				postId = $( this ).data( 'postId' );
 
 				ensuredPromise = api.Posts.ensurePosts( [ postId ] );
 				ensuredPromise.done( function( postsData ) {
 					var postData = postsData[ postId ];
+
+					postData.section.focus();
+
+					if ( ! component.containing_construct ) {
+						return;
+					}
 					if ( postData ) {
 						returnPromise = component.focusConstructWithBreadcrumb( postData.section, component.containing_construct );
 						returnPromise.done( function() {
 							component.containing_construct.focus();
+							component.select.prop( 'disabled', false );
 						} );
+					} else {
+						component.select.prop( 'disabled', false );
 					}
 				} );
 			} );
