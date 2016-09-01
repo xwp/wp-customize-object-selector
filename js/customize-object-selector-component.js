@@ -85,11 +85,9 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 						}
 					},
 					templateResult: function( data ) {
-						data.disable_edit = true;
 						return $.trim( component.select2_result_template( data ) );
 					},
 					templateSelection: function( data ) {
-						data.disable_edit = ! data.id;
 						return $.trim( component.select2_selection_template( data ) );
 					},
 					escapeMarkup: function( m ) {
