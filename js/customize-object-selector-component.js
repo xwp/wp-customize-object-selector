@@ -374,12 +374,10 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			var component = this;
 
 			// Set up the add new post buttons
-			component.container.on( 'click', '.select2-selection__choice__edit', function( event ) {
+			component.container.on( 'click', '.select2-selection__choice__edit', function() {
 				var ensuredPromise, returnPromise, postId, $elm = $( this );
 
-				event.preventDefault();
-				event.stopPropagation();
-
+				component.select.select2( 'close' );
 				component.select.prop( 'disabled', true );
 				postId = $( this ).data( 'postId' );
 				$elm.addClass( 'loading' );

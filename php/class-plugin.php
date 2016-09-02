@@ -390,6 +390,9 @@ class Plugin {
 				<span class="select2-thumbnail-wrapper">
 					<img src="{{ data.featured_image.sizes.thumbnail.url }}">
 					{{{ data.text }}}
+					<# if ( data.element ) { #>
+					<span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span></span>
+					<# } #>
 				</span>
 			<# } else if ( data.element ) { #>
 					{{{ data.text }}} <span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span></span>
