@@ -373,8 +373,6 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 */
 		setupEditLinks: function setupEditLinks() {
 			var component = this;
-			debugger;
-			var oi = component.container.find( '.select2-selection__choice__edit' );
 
 			// Set up the add new post buttons
 			component.container.find( '.select2-selection__choice__edit' ).on( 'click' , function( e ) {
