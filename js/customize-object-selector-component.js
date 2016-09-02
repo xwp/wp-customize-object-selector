@@ -114,6 +114,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 						return parseInt( value, 10 );
 					}
 				) );
+				component.setupEditLinks();
 			} );
 
 			// Sync the setting values with the select2 values.
@@ -124,8 +125,6 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			component.setupSortable();
 
 			component.setupAddNewButtons();
-
-			component.setupEditLinks();
 
 			component.repopulateSelectOptionsForSettingChange = _.bind( component.repopulateSelectOptionsForSettingChange, component );
 			api.bind( 'change', component.repopulateSelectOptionsForSettingChange );
@@ -374,13 +373,18 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 */
 		setupEditLinks: function setupEditLinks() {
 			var component = this;
+			debugger;
+			var oi = component.container.find( '.select2-selection__choice__edit' );
 
 			// Set up the add new post buttons
-			component.container.on( 'click', '.edit-post-link', function() {
-				var ensuredPromise, returnPromise, postId;
+			component.container.find( '.select2-selection__choice__edit' ).on( 'click' , function( e ) {
+				e.stopPropagation();
+				var ensuredPromise, returnPromise, postId, $selection;
 
 				component.select.prop( 'disabled', true );
-				postId = $( this ).data( 'postId' );
+
+				$selection = $( this ).parent();
+				postId = $selection.data('data').id;
 
 				ensuredPromise = api.Posts.ensurePosts( [ postId ] );
 				ensuredPromise.done( function( postsData ) {

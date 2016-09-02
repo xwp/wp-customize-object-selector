@@ -392,9 +392,8 @@ class Plugin {
 					{{{ data.text }}}
 				</span>
 			<# } else if ( data.element ) { #>
-				<a class="edit-post-link" data-post-id="{{ data.id }}">
 					{{{ data.text }}}
-				</a>
+					<span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation"></span>
 			<# } else { #>
 				{{{ data.text }}}
 			<# } #>
