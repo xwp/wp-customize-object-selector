@@ -114,7 +114,6 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 						return parseInt( value, 10 );
 					}
 				) );
-				component.setupEditLinks();
 			} );
 
 			// Sync the setting values with the select2 values.
@@ -123,8 +122,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			} );
 
 			component.setupSortable();
-
 			component.setupAddNewButtons();
+			component.setupEditLinks();
 
 			component.repopulateSelectOptionsForSettingChange = _.bind( component.repopulateSelectOptionsForSettingChange, component );
 			api.bind( 'change', component.repopulateSelectOptionsForSettingChange );
@@ -375,14 +374,15 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			var component = this;
 
 			// Set up the add new post buttons
-			component.container.find( '.select2-selection__choice__edit' ).on( 'click' , function( e ) {
-				e.stopPropagation();
-				var ensuredPromise, returnPromise, postId, $selection;
+			component.container.on( 'click', '.select2-selection__choice__edit', function( event ) {
+				var ensuredPromise, returnPromise, postId, $elm = $( this );
+
+				event.preventDefault();
+				event.stopPropagation();
 
 				component.select.prop( 'disabled', true );
-
-				$selection = $( this ).parent();
-				postId = $selection.data('data').id;
+				postId = $( this ).data( 'postId' );
+				$elm.addClass( 'loading' );
 
 				ensuredPromise = api.Posts.ensurePosts( [ postId ] );
 				ensuredPromise.done( function( postsData ) {
@@ -398,9 +398,11 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 						returnPromise.done( function() {
 							component.containing_construct.focus();
 							component.select.prop( 'disabled', false );
+							$elm.removeClass( 'loading' );
 						} );
 					} else {
 						component.select.prop( 'disabled', false );
+						$elm.removeClass( 'loading' );
 					}
 				} );
 			} );

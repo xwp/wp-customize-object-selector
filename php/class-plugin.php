@@ -104,7 +104,7 @@ class Plugin {
 			$wp_styles->add( $handle, $src, $deps, $this->version );
 		}
 
-		$handle = 'customize-object-selector';
+		$handle = 'customize-object-selector-control';
 		$src = plugins_url( 'css/customize-object-selector' . $suffix, dirname( __FILE__ ) );
 		$deps = array( 'customize-controls', 'select2' );
 		$wp_styles->add( $handle, $src, $deps, $this->version );
@@ -392,8 +392,7 @@ class Plugin {
 					{{{ data.text }}}
 				</span>
 			<# } else if ( data.element ) { #>
-					{{{ data.text }}}
-					<span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation"></span>
+					{{{ data.text }}} <span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector'); ?></span></span>
 			<# } else { #>
 				{{{ data.text }}}
 			<# } #>

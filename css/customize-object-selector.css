@@ -1,8 +1,27 @@
 .select2-container {
 	z-index: 1000000;
+	margin-bottom: 5px;
 }
+
 .select2-thumbnail-wrapper img {
 	height: 32px;
 	width: auto;
 	vertical-align: middle;
+}
+
+.select2-selection__choice__edit {
+	cursor: pointer;
+}
+
+.select2-selection--single .select2-selection__choice__edit {
+	line-height: 26px;
+}
+
+.select2-selection__choice__edit.loading:before {
+	background: url(../images/spinner.gif) no-repeat;
+	-webkit-background-size: 20px 20px;
+	background-size: 20px 20px;
+	color: rgba( 255, 255, 255, 0 );
+	opacity: 0.7;
+	filter: alpha(opacity=70);
 }
