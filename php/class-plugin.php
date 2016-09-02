@@ -392,7 +392,7 @@ class Plugin {
 					{{{ data.text }}}
 				</span>
 			<# } else if ( data.element ) { #>
-					{{{ data.text }}} <span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector'); ?></span></span>
+					{{{ data.text }}} <span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span></span>
 			<# } else { #>
 				{{{ data.text }}}
 			<# } #>
