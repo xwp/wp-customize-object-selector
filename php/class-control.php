@@ -34,11 +34,11 @@ class Control extends \WP_Customize_Control {
 	);
 
 	/**
-	 * Query args for posts.
+	 * Query vars for posts.
 	 *
 	 * @var array|null
 	 */
-	public $post_query_args;
+	public $post_query_vars;
 
 	/**
 	 * Setting property.
@@ -94,7 +94,7 @@ class Control extends \WP_Customize_Control {
 			parent::json(),
 			wp_array_slice_assoc( get_object_vars( $this ), array(
 				'select2_options',
-				'post_query_args',
+				'post_query_vars',
 				'setting_property',
 			) )
 		);
