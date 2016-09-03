@@ -202,9 +202,6 @@ class Plugin {
 			),
 			$post_query_vars
 		);
-		if ( ! empty( $post_query_vars['post__in'] ) ) {
-			$post_query_vars['posts_per_page'] = -1;
-		}
 
 		// Whitelist allowed query vars.
 		$allowed_query_vars = array(
@@ -338,6 +335,9 @@ class Plugin {
 		}
 
 		$post_query_vars['include_featured_images'] = ! empty( $post_query_args['include_featured_images'] );
+		if ( ! empty( $post_query_vars['post__in'] ) ) {
+			$post_query_vars['posts_per_page'] = -1;
+		}
 
 		if ( ! is_array( $post_query_vars['tree_args'] ) ) {
 			return new \WP_Error(
