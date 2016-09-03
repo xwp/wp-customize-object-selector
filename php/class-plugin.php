@@ -42,7 +42,8 @@ class Plugin {
 		add_action( 'wp_default_scripts', array( $this, 'register_scripts' ), 100 );
 		add_action( 'wp_default_styles', array( $this, 'register_styles' ), 100 );
 
-		add_action( 'customize_register', array( $this, 'customize_register' ), 9 );
+		add_action( 'customize_register', array( $this, 'register_control_type' ), 9 );
+		add_action( 'customize_register', array( $this, 'replace_dropdown_pages_controls' ), 11 );
 
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customize_controls_enqueue_scripts' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
@@ -55,9 +56,44 @@ class Plugin {
 	 *
 	 * @param \WP_Customize_Manager $wp_customize Manager.
 	 */
-	function customize_register( \WP_Customize_Manager $wp_customize ) {
+	function register_control_type( \WP_Customize_Manager $wp_customize ) {
 		require_once __DIR__ . '/class-control.php';
 		$wp_customize->register_control_type( __NAMESPACE__ . '\\Control' );
+	}
+
+	/**
+	 * Replace known dropdown-pages controls (page on front and page for posts) with object selector controls that show trees.
+	 *
+	 * @param \WP_Customize_Manager $wp_customize Manager.
+	 */
+	function replace_dropdown_pages_controls( \WP_Customize_Manager $wp_customize ) {
+		$control_ids = array( 'page_on_front', 'page_for_posts' );
+		foreach ( $control_ids as $control_id ) {
+			$existing_control = $wp_customize->get_control( $control_id );
+			if ( $existing_control ) {
+				$selector_control = new Control( $wp_customize, $existing_control->id, array(
+					'label' => $existing_control->label,
+					'section' => $existing_control->section,
+					'post_query_vars' => array(
+						'post_type' => 'page',
+						'post_status' => 'publish',
+						'tree_args' => array(
+							'sort_column' => 'menu_order, post_title',
+						),
+					),
+					'select2_options' => array(
+						'multiple' => false,
+						'allowClear' => true,
+						// @codingStandardsIgnoreStart
+						'placeholder' => __( '&mdash; Select &mdash;', 'default' ), // @todo WPCS's WordPress.WP.I18n.TextDomainMismatch sniff should allow default.
+						// @codingStandardsIgnoreEnd
+					),
+				) );
+
+				$wp_customize->remove_control( $existing_control->id );
+				$wp_customize->add_control( $selector_control );
+			}
+		}
 	}
 
 	/**
