@@ -38,6 +38,7 @@ class Plugin {
 	 * Initialize.
 	 */
 	function init() {
+		load_plugin_textdomain( 'customize-object-selector' );
 
 		add_action( 'wp_default_scripts', array( $this, 'register_scripts' ), 100 );
 		add_action( 'wp_default_styles', array( $this, 'register_styles' ), 100 );
