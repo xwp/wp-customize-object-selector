@@ -29,7 +29,7 @@ class Plugin {
 	public function __construct() {
 
 		// Parse plugin version.
-		if ( preg_match( '/Version:\s*(\S+)/', file_get_contents( dirname( __FILE__ ) . '/../customize-object-selector.php' ), $matches ) ) {
+		if ( preg_match( '/Version:\s*(\S+)/', file_get_contents( __DIR__ . '/../customize-object-selector.php' ), $matches ) ) {
 			$this->version = $matches[1];
 		}
 	}
@@ -38,6 +38,7 @@ class Plugin {
 	 * Initialize.
 	 */
 	function init() {
+		load_plugin_textdomain( 'customize-object-selector' );
 
 		add_action( 'wp_default_scripts', array( $this, 'register_scripts' ), 100 );
 		add_action( 'wp_default_styles', array( $this, 'register_styles' ), 100 );
@@ -66,19 +67,26 @@ class Plugin {
 	 * @param \WP_Scripts $wp_scripts Scripts.
 	 */
 	public function register_scripts( \WP_Scripts $wp_scripts ) {
-		$suffix = ( SCRIPT_DEBUG ? '' : '.min' ) . '.js';
+		$is_git_repo = file_exists( dirname( __DIR__ ) . '/.git' );
+		$suffix = ( SCRIPT_DEBUG || $is_git_repo ? '' : '.min' ) . '.js';
 
 		$handle = 'select2';
 		if ( ! $wp_scripts->query( $handle, 'registered' ) ) {
-			$src = plugins_url( 'bower_components/select2/dist/js/select2.full' . $suffix, dirname( __FILE__ ) );
+			$src = plugins_url( 'bower_components/select2/dist/js/select2.full' . $suffix, __DIR__ );
 			$deps = array( 'jquery' );
 			$in_footer = 1;
 			$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 		}
 
+		$handle = 'customize-object-selector-component';
+		$src = plugins_url( 'js/customize-object-selector-component' . $suffix, __DIR__ );
+		$deps = array( 'jquery', 'select2', 'customize-base', 'jquery-ui-sortable' );
+		$in_footer = 1;
+		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
+
 		$handle = 'customize-object-selector-control';
-		$src = plugins_url( 'js/customize-object-selector-control.js', dirname( __FILE__ ) );
-		$deps = array( 'jquery', 'select2', 'customize-controls', 'jquery-ui-sortable' );
+		$src = plugins_url( 'js/customize-object-selector-control' . $suffix, __DIR__ );
+		$deps = array( 'customize-controls', 'customize-object-selector-component' );
 		$in_footer = 1;
 		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 	}
@@ -89,17 +97,18 @@ class Plugin {
 	 * @param \WP_Styles $wp_styles Styles.
 	 */
 	public function register_styles( \WP_Styles $wp_styles ) {
-		$suffix = ( SCRIPT_DEBUG ? '' : '.min' ) . '.css';
+		$is_git_repo = file_exists( dirname( __DIR__ ) . '/.git' );
+		$suffix = ( SCRIPT_DEBUG || $is_git_repo ? '' : '.min' ) . '.css';
 
 		$handle = 'select2';
 		if ( ! $wp_styles->query( $handle, 'registered' ) ) {
-			$src = plugins_url( 'bower_components/select2/dist/css/select2' . $suffix, dirname( __FILE__ ) );
+			$src = plugins_url( 'bower_components/select2/dist/css/select2' . $suffix, __DIR__ );
 			$deps = array();
 			$wp_styles->add( $handle, $src, $deps, $this->version );
 		}
 
-		$handle = 'customize-object-selector-control';
-		$src = plugins_url( 'css/customize-object-selector-control.css', dirname( __FILE__ ) );
+		$handle = 'customize-object-selector';
+		$src = plugins_url( 'css/customize-object-selector' . $suffix, __DIR__ );
 		$deps = array( 'customize-controls', 'select2' );
 		$wp_styles->add( $handle, $src, $deps, $this->version );
 	}
@@ -139,6 +148,7 @@ class Plugin {
 			's',
 			'paged',
 			'post__in',
+			'post__not_in',
 			'meta_key',
 			'meta_value',
 			'meta_query',
@@ -306,6 +316,7 @@ class Plugin {
 				$result = array(
 					'id' => $post->ID,
 					'text' => $text,
+					'title' => $title, // Option tooltip.
 					'post_title' => $title,
 					'post_type' => $post->post_type,
 					'post_status' => $post->post_status,
@@ -314,6 +325,15 @@ class Plugin {
 				);
 				if ( $include_featured_images ) {
 					$attachment_id = get_post_thumbnail_id( $post->ID );
+
+					/**
+					 * Filters the featured image attachment ID for a given post.
+					 *
+					 * @param int|bool $attachment_id Attachment ID or `false`.
+					 * @param \WP_Post $post Post object.
+					 */
+					$attachment_id = apply_filters( 'customize_object_selector_attachment_id', $attachment_id, $post );
+
 					if ( $attachment_id ) {
 						$result['featured_image'] = wp_prepare_attachment_for_js( $attachment_id );
 					} else {
@@ -349,6 +369,25 @@ class Plugin {
 	 */
 	public function print_templates() {
 		?>
+		<script id="tmpl-customize-object-selector-component" type="text/html">
+			<select id="{{ data.select_id }}"
+				<# if ( data.multiple ) { #>
+					multiple="multiple"
+				<# } #>
+				>
+			</select>
+
+			<# if ( ! _.isEmpty( data.addable_post_types ) ) { #>
+				<span class="add-new-post">
+					<# _.each( data.addable_post_types, function( addable_post_type ) { #>
+						<button type="button" class="button secondary-button add-new-post-button" data-post-type="{{ addable_post_type.post_type }}">
+							{{ addable_post_type.add_button_label }}
+						</button>
+					<# } ) #>
+				</span>
+			<# } #>
+		</script>
+
 		<script id="tmpl-customize-object-selector-item" type="text/html">
 			<# if ( data.featured_image && data.featured_image.sizes && data.featured_image.sizes.thumbnail && data.featured_image.sizes.thumbnail.url ) { #>
 				<span class="select2-thumbnail-wrapper">

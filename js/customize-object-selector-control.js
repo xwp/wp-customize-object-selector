@@ -1,4 +1,4 @@
-/* global wp, JSON */
+/* global wp, jQuery, console */
 /* eslint consistent-this: [ "error", "control" ] */
 /* eslint no-magic-numbers: ["error", { "ignore": [0,1] }] */
 /* eslint complexity: ["error", 8] */
@@ -16,21 +16,28 @@
 	api.ObjectSelectorControl = api.Control.extend({
 
 		initialize: function( id, options ) {
-			var control = this, args, postTypes = [];
+			var control = this, args;
 
 			args = options || {};
 
 			args.params = _.extend(
 				{
 					select2_options: {},
-					post_query_args: null
+					post_query_vars: null,
+					setting_property: null // To sync with the property of a given setting (e.g. value.post_parent)
 				},
 				args.params || {}
 			);
+			if ( args.params.post_query_args && ! args.params.post_query_vars ) {
+				if ( 'undefined' !== typeof console ) {
+					console.warn( '[customize-object-selector-control] The post_query_args arg is deprecated in favor of post_query_vars.' );
+				}
+				args.params.post_query_vars = args.params.post_query_args;
+			}
 
-			// See https://select2.github.io/examples.html#programmatic-control
 			args.params.select2_options = _.extend(
 				{
+					multiple: false,
 					cache: false,
 					width: '100%'
 				},
@@ -45,352 +52,142 @@
 				args.params.content.attr( 'id', 'customize-control-' + id.replace( /]/g, '' ).replace( /\[/g, '-' ) );
 				args.params.content.attr( 'class', 'customize-control customize-control-' + args.params.type );
 			}
+			args.params.select_id = id + String( Math.random() );
 
-			// Set up parameters for post_addition_buttons.
-			if ( _.isUndefined( args.params.post_addition_buttons ) && api.Posts && api.Posts.insertAutoDraftPost ) {
-				if ( ! args.params.post_query_args.post_type ) {
-					postTypes = [ 'post' ];
-				} else if ( _.isArray( args.params.post_query_args.post_type ) ) {
-					postTypes = args.params.post_query_args.post_type;
-				} else {
-					postTypes = args.params.post_query_args.post_type.split( /,/ );
-				}
-
-				postTypes = _.filter( postTypes, function( postType ) {
-					return ! _.isUndefined( api.Posts.data.postTypes[ postType ] ) && api.Posts.data.postTypes[ postType ].show_in_customizer;
-				} );
-
-				args.params.post_addition_buttons = [];
-				_.each( postTypes, function( postType ) {
-					var label;
-					if ( postTypes.length > 1 ) {
-						label = api.Posts.data.postTypes[ postType ].labels.add_new_item || api.Posts.data.postTypes[ postType ].labels.add_new;
-					} else {
-						label = api.Posts.data.postTypes[ postType ].labels.add_new || api.Posts.data.postTypes[ postType ].labels.add_new_item;
-					}
-					args.params.post_addition_buttons.push( {
-						post_type: postType,
-						label: label
-					} );
-				} );
-			}
-
-			// @todo Add support for settingSubproperty (e.g. so we can map a post_parent property of a post setting).
 			api.Control.prototype.initialize.call( control, id, args );
+
+			_.bind( control.handleRemoval, control );
+			api.control.bind( 'remove', control.handleRemoval );
 		},
 
 		/**
-		 * Query posts.
+		 * Create synced property value.
 		 *
-		 * @param {object} queryVars Query vars.
-		 * @returns {jQuery.promise} Promise.
+		 * Given that the current setting contains an object value, create a new
+		 * model (Value) to represent the value of one of its properties, and
+		 * sync the value between the root object and the property value when
+		 * either are changed. The returned Value can be used to sync with an
+		 * Element.
+		 *
+		 * @param {wp.customize.Value} root Root value instance.
+		 * @param {string} property Property name.
+		 * @returns {wp.customize.Value} Property value instance.
 		 */
-		queryPosts: function( queryVars ) {
-			var control = this, action, data, postQueryArgs = {};
-			action = 'customize_object_selector_query';
-			data = api.previewer.query();
-			data.customize_object_selector_query_nonce = api.settings.nonce[ action ];
-			_.extend(
-				postQueryArgs,
-				control.params.post_query_args || {},
-				queryVars
-			);
-			data.post_query_args = JSON.stringify( postQueryArgs );
-			return wp.ajax.post( action, data );
+		createSyncedPropertyValue: function createSyncedPropertyValue( root, property ) {
+			var propertyValue = new api.Value( root.get()[ property ] );
+
+			// Sync changes to the property back to the root value.
+			propertyValue.bind( function updatePropertyValue( newPropertyValue ) {
+				var rootValue = _.clone( root.get() );
+				rootValue[ property ] = newPropertyValue;
+				root.set( rootValue );
+			} );
+
+			// Sync changes in the root value to the model.
+			root.bind( function updateRootValue( newRootValue, oldRootValue ) {
+				if ( ! _.isEqual( newRootValue[ property ], oldRootValue[ property ] ) ) {
+					propertyValue.set( newRootValue[ property ] );
+				}
+			} );
+
+			return propertyValue;
+		},
+
+		/**
+		 * Handle control removal.
+		 *
+		 * @todo We may not want to remove and destroy here, as in the case of a control removed temporarily to be re-added later?
+		 *
+		 * @param {wp.customize.Control} removedControl Removed control.
+		 * @returns {void}
+		 */
+		handleRemoval: function handleRemoval( removedControl ) {
+			var control = this;
+			if ( removedControl === control ) {
+				control.objectSelector.destroy();
+				api.control.unbind( 'remove', control.handleRemoval );
+				control.container.remove();
+
+				if ( control.section() && api.section( control.section() ) ) {
+					api.section( control.section() ).expanded.unbind( control.closeDropdownUponSectionClose );
+				}
+			}
 		},
 
 		/**
 		 * @inheritdoc
 		 */
 		ready: function() {
-			var control = this;
+			var control = this, itemTemplate, model, selectorContainer;
 
-			control.select2Template = wp.template( 'customize-object-selector-item' );
+			// Set up the Value that the selector will sync with.
+			if ( control.params.setting_property ) {
+				model = control.createSyncedPropertyValue( control.setting, control.params.setting_property );
+			} else {
+				model = control.setting;
+			}
 
-			control.select2 = control.container.find( '.object-selector:first' ).select2( _.extend(
-				{
-					ajax: {
-						transport: function( params, success, failure ) {
-							var request = control.queryPosts({
-								s: params.data.term,
-								paged: params.data.page || 1
-							});
-							request.done( success );
-							request.fail( failure );
-						}
-					},
-					templateResult: function( data ) {
-						return control.select2Template( data );
-					},
-					templateSelection: function( data ) {
-						return control.select2Template( data );
-					},
-					escapeMarkup: function( m ) {
+			itemTemplate = wp.template( 'customize-object-selector-item' );
+			control.objectSelector = new api.ObjectSelectorComponent({
+				model: model,
+				containing_construct: control,
+				post_query_vars: control.params.post_query_vars,
+				select_id: control.params.select_id,
+				select2_options: control.params.select2_options,
+				select2_result_template: itemTemplate,
+				select2_selection_template: itemTemplate
+			});
 
-						// Do not escape HTML in the select options text.
-						return m;
-					}
-				},
-				control.params.select2_options,
-				{
-					disabled: true // Enabled once populated.
+			selectorContainer = control.container.find( '.customize-object-selector-container' );
+			control.objectSelector.embed( selectorContainer );
+
+			/*
+			 * Prevent escape key from causing the current section to collapse.
+			 * Stopping propagation prevents the body keydown handler from being reached:
+			 * https://github.com/xwp/wordpress-develop/blob/4.6.0/src/wp-admin/js/customize-controls.js#L3971-L4007
+			 */
+			control.objectSelector.select.data( 'select2' ).on( 'keypress', function stopEscKeypressPropagation( event ) {
+				var escapeKey = 27;
+				if ( escapeKey === event.which ) {
+					event.stopPropagation();
 				}
-			) );
-
-			control.populateSelectOptions().done( function() {
-				control.select2.prop( 'disabled', false );
 			} );
 
-			// Sync the select2 values with the setting values.
-			control.select2.on( 'change', function() {
-				control.setSettingValues( _.map(
-					control.getSelectedValues(),
-					function( value ) {
-						return parseInt( value, 10 );
-					}
-				) );
-			} );
+			// @todo For some reason tab focus is not working as expected with non-multiple select2s. The following is a workaround.
+			if ( ! control.params.select2_options.multiple ) {
+				control.objectSelector.select.on( 'select2:close', function() {
+					control.objectSelector.select.focus();
+				} );
+			}
 
-			// Sync the setting values with the select2 values.
-			control.setting.bind( function() {
-				control.populateSelectOptions();
-			} );
-
-			control.setupSortable();
-
-			control.setupAddNewButtons();
+			control.closeDropdownUponSectionClose = _.bind( control.closeDropdownUponSectionClose, control );
+			if ( control.section() ) {
+				api.section( control.section(), function( section ) {
+					section.expanded.bind( control.closeDropdownUponSectionClose );
+				} );
+			}
 
 			api.Control.prototype.ready.call( control );
 
-			// Add listener for changes to settings that are in this control.
-			function watchForChangedSettings( changedSetting ) {
-				var postId, value = control.setting.get();
-				var matches = changedSetting.id.match( /^post\[[^\]]+]\[(\d+)]/ );
-				if ( matches ) {
-					postId = parseInt( matches[1], 10 );
-					if ( _.isArray( value ) ? $.inArray( postId, value ) : postId === value ) {
-						control.populateSelectOptions( true );
-					}
-				}
-			}
-			api.bind( 'change', watchForChangedSettings );
-
-			// Clean up.
 			api.control.bind( 'remove', function( removedControl ) {
 				if ( removedControl.id === control.id ) {
-					wp.customize.unbind( 'change', watchForChangedSettings );
+					control.objectSelector.destroy();
 				}
 			} );
 		},
 
 		/**
-		 * Get the selected values.
+		 * Close a select2 when its section is closed.
 		 *
-		 * @returns {Number[]} Selected IDs.
-		 */
-		getSelectedValues: function() {
-			var control = this, selectValues;
-			selectValues = control.select2.val();
-			if ( _.isEmpty( selectValues ) ) {
-				selectValues = [];
-			} else if ( ! _.isArray( selectValues ) ) {
-				selectValues = [ selectValues ];
-			}
-			return _.map(
-				selectValues,
-				function( value ) {
-					return parseInt( value, 10 );
-				}
-			);
-		},
-
-		/**
-		 * Get the setting values.
-		 *
-		 * @returns {Number[]} IDs.
-		 */
-		getSettingValues: function() {
-			var control = this, settingValues, value;
-			settingValues = control.setting.get();
-			if ( ! _.isArray( settingValues ) ) {
-				value = parseInt( settingValues, 10 );
-				if ( isNaN( value ) || value <= 0 ) {
-					settingValues = [];
-				} else {
-					settingValues = [ value ];
-				}
-			}
-			return settingValues;
-		},
-
-		/**
-		 * Update the setting according to whether it is an array or scalar.
-		 *
-		 * If multiple, an array will be saved to the setting; if not multiple
-		 * then the first value will be set, or 0 if empty.
-		 *
-		 * @param {Number[]} values IDs.
+		 * @param {bool} sectionExpanded Expanded.
 		 * @returns {void}
 		 */
-		setSettingValues: function( values ) {
-			var control = this;
-			if ( control.params.select2_options.multiple ) {
-				control.setting.set( values );
-			} else {
-				control.setting.set( values[0] || 0 );
+		closeDropdownUponSectionClose: function( sectionExpanded ) {
+			var control = this,
+				select = control.objectSelector ? control.objectSelector.select : false;
+			if ( ! sectionExpanded && select && select.data( 'select2' ) ) {
+				select.select2( 'close' );
 			}
-		},
-
-		/**
-		 * Setup sortable.
-		 *
-		 * @returns {void}
-		 */
-		setupSortable: function() {
-			var control = this, ul;
-			if ( ! control.params.select2_options.multiple ) {
-				return;
-			}
-
-			ul = control.select2.next( '.select2-container' ).first( 'ul.select2-selection__rendered' );
-			ul.sortable({
-				placeholder: 'ui-state-highlight',
-				forcePlaceholderSize: true,
-				items: 'li:not(.select2-search__field)',
-				tolerance: 'pointer',
-				stop: function() {
-					var selectedValues = [];
-					ul.find( '.select2-selection__choice' ).each( function() {
-						var id, option;
-						id = parseInt( $( this ).data( 'data' ).id, 10 );
-						selectedValues.push( id );
-						option = control.select2.find( 'option[value="' + id + '"]' );
-						control.select2.append( option );
-					});
-					control.setSettingValues( selectedValues );
-				}
-			});
-		},
-
-		/**
-		 * Setup buttons for adding new posts.
-		 *
-		 * @returns {void}
-		 */
-		setupAddNewButtons: function setupAddNewButtons() {
-			var control = this;
-
-			// Set up the add new post buttons
-			control.container.on( 'click', '.add-new-post-button', function() {
-				var promise, button;
-				button = $( this );
-				button.prop( 'disabled', true );
-				promise = api.Posts.insertAutoDraftPost( $( this ).data( 'postType' ) );
-
-				promise.done( function( data ) {
-					var returnPromise = focusConstructWithBreadcrumb( data.section, control );
-					data.section.focus();
-					returnPromise.done( function() {
-						var values;
-						if ( 'publish' === data.setting.get().post_status ) {
-							values = control.getSettingValues().slice( 0 );
-							if ( ! control.params.select2_options.multiple ) {
-								values = [ data.postId ];
-							} else {
-								// @todo Really the add new buttons should be disabled when the limit is reached.
-								if ( control.params.select2_options.multiple && control.params.select2_options.limit >= values.length ) {
-									values.length = control.params.select2_options.limit - 1;
-								}
-								values.unshift( data.postId )
-							}
-							control.setSettingValues( values );
-						}
-						button.focus(); // @todo Focus on the select2?
-					} );
-				} );
-
-				promise.always( function() {
-					button.prop( 'disabled', false );
-				} );
-			} );
-
-			/**
-			 * Focus (expand) one construct and then focus on another construct after the first is collapsed.
-			 *
-			 * This overrides the back button to serve the purpose of breadcrumb navigation.
-			 * This is modified from WP Core.
-			 *
-			 * @link https://github.com/xwp/wordpress-develop/blob/e7bbb482d6069d9c2d0e33789c7d290ac231f056/src/wp-admin/js/customize-widgets.js#L2143-L2193
-			 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} focusConstruct - The object to initially focus.
-			 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} returnConstruct - The object to return focus.
-			 * @returns {void}
-			 */
-			function focusConstructWithBreadcrumb( focusConstruct, returnConstruct ) {
-				var deferred = $.Deferred();
-				focusConstruct.focus();
-				function onceCollapsed( isExpanded ) {
-					if ( ! isExpanded ) {
-						focusConstruct.expanded.unbind( onceCollapsed );
-						returnConstruct.focus( {
-							completeCallback: function() {
-								deferred.resolve();
-							}
-						} );
-					}
-				}
-				focusConstruct.expanded.bind( onceCollapsed );
-				return deferred;
-			}
-		},
-
-		/**
-		 * Re-populate the select options based on the current setting value.
-		 *
-		 * @param {boolean} refresh Whether to force the refreshing of the options.
-		 * @returns {jQuery.promise} Resolves when complete. Rejected when failed.
-		 */
-		populateSelectOptions: function( refresh ) {
-			var control = this, request, settingValues, selectedValues, deferred = jQuery.Deferred();
-
-			settingValues = control.getSettingValues();
-			selectedValues = control.getSelectedValues();
-			if ( ! refresh && _.isEqual( selectedValues, settingValues ) ) {
-				deferred.resolve();
-			} else if ( 0 === settingValues.length ) {
-				control.select2.empty();
-				control.select2.trigger( 'change' );
-				deferred.resolve();
-			} else {
-				request = control.queryPosts({
-					post__in: settingValues,
-					orderby: 'post__in'
-				});
-				request.done( function( data ) {
-					if ( control.notifications ) {
-						control.notifications.remove( 'select2_init_failure' );
-					}
-					control.select2.empty();
-					_.each( data.results, function( item ) {
-						var option = new Option( control.select2Template( item ), item.id, true, true );
-						control.select2.append( option );
-					} );
-					control.select2.trigger( 'change' );
-					deferred.resolve();
-				} );
-				request.fail( function() {
-					var notification;
-					if ( api.Notification && control.notifications ) {
-						// @todo Allow clicking on this notification to re-call populateSelectOptions()
-						notification = new api.Notification( 'select2_init_failure', {
-							type: 'error',
-							message: 'Failed to fetch selections.' // @todo l10n
-						} );
-						control.notifications.add( notification.code, notification );
-					}
-					deferred.reject();
-				} );
-			}
-			return deferred.promise();
 		},
 
 		/**
@@ -451,6 +248,6 @@
 		}
 	});
 
-	api.controlConstructor['object_selector'] = api.ObjectSelectorControl;
+	api.controlConstructor.object_selector = api.ObjectSelectorControl;
 
 })( wp.customize, jQuery );

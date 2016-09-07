@@ -3,8 +3,7 @@
   "version": "0.2.0",
   "homepage": "https://github.com/xwp/wp-customize-object-selector",
   "authors": [
-    "Daniel Bachhuber",
-    "Weston Ruter"
+    "XWP"
   ],
   "moduleType": [
     "globals"
