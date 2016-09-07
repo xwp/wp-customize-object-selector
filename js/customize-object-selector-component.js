@@ -454,7 +454,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			var component = this;
 
 			api.unbind( 'change', component.repopulateSelectOptionsForSettingChange );
-			if ( component.select ) {
+			if ( component.select && component.select.data( 'select2' ) ) {
 				component.select.select2( 'close' );
 			}
 			if ( component.container ) {
