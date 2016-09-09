@@ -416,8 +416,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 					orderby: 'post__in'
 				});
 				request.done( function( data ) {
-					if ( component.notifications ) {
-						component.notifications.remove( 'select2_init_failure' );
+					if ( component.containing_construct.notifications ) {
+						component.containing_construct.notifications.remove( 'select2_init_failure' );
 					}
 					component.select.empty();
 					_.each( data.results, function( item ) {
@@ -432,14 +432,15 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				} );
 				request.fail( function() {
 					var notification;
-					if ( api.Notification && component.notifications ) {
+					if ( api.Notification && component.containing_construct.notifications ) {
 
 						// @todo Allow clicking on this notification to re-call populateSelectOptions()
+						// @todo The error should be triggered on the component itself so that the control adds it to its notifications. Too much coupling here.
 						notification = new api.Notification( 'select2_init_failure', {
 							type: 'error',
 							message: 'Failed to fetch selections.' // @todo l10n
 						} );
-						component.notifications.add( notification.code, notification );
+						component.containing_construct.notifications.add( notification.code, notification );
 					}
 					deferred.reject();
 				} );
