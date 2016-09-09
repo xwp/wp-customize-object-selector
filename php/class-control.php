@@ -41,6 +41,15 @@ class Control extends \WP_Customize_Control {
 	public $post_query_vars;
 
 	/**
+	 * Whether the add buttons will be shown.
+	 *
+	 * These buttons will only appear if the Customize Posts plugin is active.
+	 *
+	 * @var bool
+	 */
+	public $show_add_buttons = true;
+
+	/**
 	 * Setting property.
 	 *
 	 * If defined, the associated setting is assumed to be an object (e.g. a post)
@@ -96,6 +105,7 @@ class Control extends \WP_Customize_Control {
 				'select2_options',
 				'post_query_vars',
 				'setting_property',
+				'show_add_buttons',
 			) )
 		);
 	}

@@ -132,6 +132,7 @@
 				model: model,
 				containing_construct: control,
 				post_query_vars: control.params.post_query_vars,
+				show_add_buttons: control.params.show_add_buttons,
 				select_id: control.params.select_id,
 				select2_options: control.params.select2_options,
 				select2_result_template: itemTemplate,

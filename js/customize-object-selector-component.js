@@ -20,7 +20,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 * @param {object}   args.select2_options - See available options at https://select2.github.io/examples.html#programmatic-control
 		 * @param {boolean}  args.select2_options.multiple - Whether multiple can be selected.
 		 * @param {string}   args.select_id - ID to be used for the underlying select element
-		 * @param {object}   args.post_query_vars - WP_Query vars to use in the query, opon which 's' and 'paged' will be merged.
+		 * @param {object}   args.post_query_vars - WP_Query vars to use in the query, upon which 's' and 'paged' will be merged.
+		 * @param {Boolean}  args.show_add_buttons - Whether add buttons will be shown if available.
 		 * @returns {void}
 		 */
 		initialize: function initialize( args ) {
@@ -41,6 +42,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			}
 			component.container = args.container;
 			component.post_query_vars = null;
+			component.show_add_buttons = _.isUndefined( args.show_add_buttons ) ? true : args.show_add_buttons;
 			component.select_id = args.select_id || '';
 			component.control_template = args.control_template || wp.template( 'customize-object-selector-component' );
 			component.select2_result_template = args.select2_result_template || wp.template( 'customize-object-selector-item' );
@@ -66,7 +68,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			templateData = {
 				multiple: component.multiple,
 				select_id: component.select_id,
-				addable_post_types: component.getAddableQueriedPostTypes()
+				addable_post_types: component.show_add_buttons ? component.getAddableQueriedPostTypes() : []
 			};
 
 			component.container.empty().append( component.control_template( templateData ) );
