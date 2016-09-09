@@ -133,6 +133,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		/**
 		 * Repopulate select2 options for relevant setting change.
 		 *
+		 * @todo Debounce.
+		 *
 		 * @param {wp.customize.Setting} changedSetting Setting.
 		 * @returns {void}
 		 */
@@ -320,6 +322,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		/**
 		 * Setup buttons for adding new posts.
 		 *
+		 * See wp.customize.Posts.PostsPanel.prototype.onClickAddPostButton
+		 *
 		 * @returns {void}
 		 */
 		setupAddNewButtons: function setupAddNewButtons() {
@@ -327,21 +331,55 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			// Set up the add new post buttons
 			component.container.on( 'click', '.add-new-post-button', function() {
-				var promise, button;
+				var promise, button, postTypeObj, postType;
+				postType = $( this ).data( 'postType' );
 				button = $( this );
 				button.prop( 'disabled', true );
-				promise = api.Posts.insertAutoDraftPost( $( this ).data( 'postType' ) );
+				postTypeObj = api.Posts.data.postTypes[ postType ];
+				promise = api.Posts.insertAutoDraftPost( postType );
 
 				promise.done( function( data ) {
-					var returnPromise;
+					var returnPromise, postData, returnUrl = null, watchPreviewUrlChange;
 					data.section.focus();
 
 					if ( ! component.containing_construct ) {
 						return;
 					}
+
+					// Navigate to the newly-created post if it is public; otherwise, refresh the preview.
+					if ( postTypeObj['public'] ) {
+						returnUrl = api.previewer.previewUrl.get();
+						api.previewer.previewUrl( api.Posts.getPreviewUrl( {
+							post_type: postType,
+							post_id: data.postId
+						} ) );
+					} else {
+						api.previewer.refresh();
+					}
+
+					// Set initial post data.
+					postData = {};
+					if ( postTypeObj.supports.title ) {
+						postData.post_title = api.Posts.data.l10n.noTitle;
+					}
+					data.setting.set( _.extend(
+						{},
+						data.setting.get(),
+						postData
+					) );
+
+					// Clear out the return URL if the preview URL was changed when editing the newly-created post.
+					watchPreviewUrlChange = function() {
+						returnUrl = null;
+					};
+					api.previewer.previewUrl.bind( watchPreviewUrlChange );
+
 					returnPromise = component.focusConstructWithBreadcrumb( data.section, component.containing_construct );
 					returnPromise.done( function() {
 						var values;
+
+						api.previewer.previewUrl.unbind( watchPreviewUrlChange );
+
 						if ( 'publish' === data.setting.get().post_status ) {
 							values = component.getSettingValues().slice( 0 );
 							if ( ! component.select2_options.multiple ) {
@@ -357,6 +395,11 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 							component.setSettingValues( values );
 						}
 						button.focus(); // @todo Focus on the select2?
+
+						// Return to the previewed URL.
+						if ( returnUrl ) {
+							api.previewer.previewUrl( returnUrl );
+						}
 					} );
 				} );
 
