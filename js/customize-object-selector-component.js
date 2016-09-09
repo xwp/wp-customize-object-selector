@@ -421,7 +421,9 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 					}
 					component.select.empty();
 					_.each( data.results, function( item ) {
-						var option = new Option( component.select2_result_template( item ), item.id, true, true );
+						var selected, option;
+						selected = -1 !== $.inArray( item.id, settingValues );
+						option = new Option( component.select2_result_template( item ), item.id, selected, selected );
 						option.title = item.title;
 						component.select.append( option );
 					} );
