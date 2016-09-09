@@ -1,6 +1,6 @@
 /* global JSON */
 /* eslint consistent-this: [ "error", "component" ] */
-/* eslint no-magic-numbers: ["error", { "ignore": [0,1] }] */
+/* eslint no-magic-numbers: ["error", { "ignore": [-1,0,1] }] */
 /* eslint complexity: ["error", 10] */
 
 wp.customize.ObjectSelectorComponent = (function( api, $ ) {
@@ -140,7 +140,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			matches = changedSetting.id.match( /^post\[[^\]]+]\[(\d+)]/ );
 			if ( matches ) {
 				postId = parseInt( matches[1], 10 );
-				if ( _.isArray( value ) ? $.inArray( postId, value ) : postId === value ) {
+				if ( _.isArray( value ) ? -1 !== $.inArray( postId, value ) : postId === value ) {
 					component.populateSelectOptions( true );
 				}
 			}
