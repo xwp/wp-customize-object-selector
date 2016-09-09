@@ -1,6 +1,6 @@
 /* global JSON */
 /* eslint consistent-this: [ "error", "component" ] */
-/* eslint no-magic-numbers: ["error", { "ignore": [0,1] }] */
+/* eslint no-magic-numbers: ["error", { "ignore": [-1,0,1] }] */
 /* eslint complexity: ["error", 10] */
 
 wp.customize.ObjectSelectorComponent = (function( api, $ ) {
@@ -82,6 +82,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 							});
 							request.done( success );
 							request.fail( failure );
+							return request;
 						}
 					},
 					templateResult: function( data ) {
@@ -132,6 +133,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		/**
 		 * Repopulate select2 options for relevant setting change.
 		 *
+		 * @todo Debounce.
+		 *
 		 * @param {wp.customize.Setting} changedSetting Setting.
 		 * @returns {void}
 		 */
@@ -140,7 +143,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			matches = changedSetting.id.match( /^post\[[^\]]+]\[(\d+)]/ );
 			if ( matches ) {
 				postId = parseInt( matches[1], 10 );
-				if ( _.isArray( value ) ? $.inArray( postId, value ) : postId === value ) {
+				if ( _.isArray( value ) ? -1 !== $.inArray( postId, value ) : postId === value ) {
 					component.populateSelectOptions( true );
 				}
 			}
@@ -319,6 +322,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		/**
 		 * Setup buttons for adding new posts.
 		 *
+		 * See wp.customize.Posts.PostsPanel.prototype.onClickAddPostButton
+		 *
 		 * @returns {void}
 		 */
 		setupAddNewButtons: function setupAddNewButtons() {
@@ -326,21 +331,55 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			// Set up the add new post buttons
 			component.container.on( 'click', '.add-new-post-button', function() {
-				var promise, button;
+				var promise, button, postTypeObj, postType;
+				postType = $( this ).data( 'postType' );
 				button = $( this );
 				button.prop( 'disabled', true );
-				promise = api.Posts.insertAutoDraftPost( $( this ).data( 'postType' ) );
+				postTypeObj = api.Posts.data.postTypes[ postType ];
+				promise = api.Posts.insertAutoDraftPost( postType );
 
 				promise.done( function( data ) {
-					var returnPromise;
+					var returnPromise, postData, returnUrl = null, watchPreviewUrlChange;
 					data.section.focus();
 
 					if ( ! component.containing_construct ) {
 						return;
 					}
+
+					// Navigate to the newly-created post if it is public; otherwise, refresh the preview.
+					if ( postTypeObj['public'] ) {
+						returnUrl = api.previewer.previewUrl.get();
+						api.previewer.previewUrl( api.Posts.getPreviewUrl( {
+							post_type: postType,
+							post_id: data.postId
+						} ) );
+					} else {
+						api.previewer.refresh();
+					}
+
+					// Set initial post data.
+					postData = {};
+					if ( postTypeObj.supports.title ) {
+						postData.post_title = api.Posts.data.l10n.noTitle;
+					}
+					data.setting.set( _.extend(
+						{},
+						data.setting.get(),
+						postData
+					) );
+
+					// Clear out the return URL if the preview URL was changed when editing the newly-created post.
+					watchPreviewUrlChange = function() {
+						returnUrl = null;
+					};
+					api.previewer.previewUrl.bind( watchPreviewUrlChange );
+
 					returnPromise = component.focusConstructWithBreadcrumb( data.section, component.containing_construct );
 					returnPromise.done( function() {
 						var values;
+
+						api.previewer.previewUrl.unbind( watchPreviewUrlChange );
+
 						if ( 'publish' === data.setting.get().post_status ) {
 							values = component.getSettingValues().slice( 0 );
 							if ( ! component.select2_options.multiple ) {
@@ -356,6 +395,11 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 							component.setSettingValues( values );
 						}
 						button.focus(); // @todo Focus on the select2?
+
+						// Return to the previewed URL.
+						if ( returnUrl ) {
+							api.previewer.previewUrl( returnUrl );
+						}
 					} );
 				} );
 
@@ -377,8 +421,21 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 * @returns {void}
 		 */
 		focusConstructWithBreadcrumb: function focusConstructWithBreadcrumb( focusConstruct, returnConstruct ) {
-			var deferred = $.Deferred(), onceCollapsed;
-			focusConstruct.focus();
+			var component = this, deferred = $.Deferred(), onceCollapsed;
+			focusConstruct.focus( {
+				completeCallback: function() {
+					if ( focusConstruct.extended( api.Section ) ) {
+						/*
+						 * Note the defer is because the controls get embedded
+						 * once the section is expanded and also because it seems
+						 * that focus fails when the input is not visible yet.
+						 */
+						_.defer( function() {
+							component.focusFirstSectionControlOnceFocusable( focusConstruct );
+						} );
+					}
+				}
+			} );
 			onceCollapsed = function( isExpanded ) {
 				if ( ! isExpanded ) {
 					focusConstruct.expanded.unbind( onceCollapsed );
@@ -391,6 +448,42 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			};
 			focusConstruct.expanded.bind( onceCollapsed );
 			return deferred;
+		},
+
+		/**
+		 * Perform a dance to focus on the first control in the section.
+		 *
+		 * There is a race condition where focusing on a control too
+		 * early can result in the focus logic not being able to see
+		 * any visible inputs to focus on.
+		 *
+		 * @param {wp.customize.Section} section Section.
+		 */
+		focusFirstSectionControlOnceFocusable: function focusFirstSectionControlOnceFocusable( section ) {
+			var firstControl = section.controls()[0], onChangeActive, delay;
+			if ( ! firstControl ) {
+				return;
+			}
+			onChangeActive = function _onChangeActive( isActive ) {
+				if ( isActive ) {
+					section.active.unbind( onChangeActive );
+
+					// @todo Determine why a delay is required.
+					delay = 100;
+					_.delay( function focusControlAfterDelay() {
+						firstControl.focus( {
+							completeCallback: function() {
+								firstControl.container.find( 'input:first' ).select();
+							}
+						} );
+					}, delay );
+				}
+			};
+			if ( section.active.get() ) {
+				onChangeActive( true );
+			} else {
+				section.active.bind( onChangeActive );
+			}
 		},
 
 		/**
@@ -411,17 +504,21 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				component.select.trigger( 'change' );
 				deferred.resolve();
 			} else {
+				component.container.addClass( 'customize-object-selector-populating' );
+
 				request = component.queryPosts({
 					post__in: settingValues,
 					orderby: 'post__in'
 				});
 				request.done( function( data ) {
-					if ( component.notifications ) {
-						component.notifications.remove( 'select2_init_failure' );
+					if ( component.containing_construct.notifications ) {
+						component.containing_construct.notifications.remove( 'select2_init_failure' );
 					}
 					component.select.empty();
 					_.each( data.results, function( item ) {
-						var option = new Option( component.select2_result_template( item ), item.id, true, true );
+						var selected, option;
+						selected = -1 !== $.inArray( item.id, settingValues );
+						option = new Option( component.select2_result_template( item ), item.id, selected, selected );
 						option.title = item.title;
 						component.select.append( option );
 					} );
@@ -430,16 +527,20 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				} );
 				request.fail( function() {
 					var notification;
-					if ( api.Notification && component.notifications ) {
+					if ( api.Notification && component.containing_construct.notifications ) {
 
 						// @todo Allow clicking on this notification to re-call populateSelectOptions()
+						// @todo The error should be triggered on the component itself so that the control adds it to its notifications. Too much coupling here.
 						notification = new api.Notification( 'select2_init_failure', {
 							type: 'error',
 							message: 'Failed to fetch selections.' // @todo l10n
 						} );
-						component.notifications.add( notification.code, notification );
+						component.containing_construct.notifications.add( notification.code, notification );
 					}
 					deferred.reject();
+				} );
+				request.always( function() {
+					component.container.removeClass( 'customize-object-selector-populating' );
 				} );
 			}
 			return deferred.promise();
