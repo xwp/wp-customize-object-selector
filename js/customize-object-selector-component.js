@@ -421,8 +421,21 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 * @returns {void}
 		 */
 		focusConstructWithBreadcrumb: function focusConstructWithBreadcrumb( focusConstruct, returnConstruct ) {
-			var deferred = $.Deferred(), onceCollapsed;
-			focusConstruct.focus();
+			var component = this, deferred = $.Deferred(), onceCollapsed;
+			focusConstruct.focus( {
+				completeCallback: function() {
+					if ( focusConstruct.extended( api.Section ) ) {
+						/*
+						 * Note the defer is because the controls get embedded
+						 * once the section is expanded and also because it seems
+						 * that focus fails when the input is not visible yet.
+						 */
+						_.defer( function() {
+							component.focusFirstSectionControlOnceFocusable( focusConstruct );
+						} );
+					}
+				}
+			} );
 			onceCollapsed = function( isExpanded ) {
 				if ( ! isExpanded ) {
 					focusConstruct.expanded.unbind( onceCollapsed );
@@ -435,6 +448,42 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			};
 			focusConstruct.expanded.bind( onceCollapsed );
 			return deferred;
+		},
+
+		/**
+		 * Perform a dance to focus on the first control in the section.
+		 *
+		 * There is a race condition where focusing on a control too
+		 * early can result in the focus logic not being able to see
+		 * any visible inputs to focus on.
+		 *
+		 * @param {wp.customize.Section} section Section.
+		 */
+		focusFirstSectionControlOnceFocusable: function focusFirstSectionControlOnceFocusable( section ) {
+			var firstControl = section.controls()[0], onChangeActive, delay;
+			if ( ! firstControl ) {
+				return;
+			}
+			onChangeActive = function _onChangeActive( isActive ) {
+				if ( isActive ) {
+					section.active.unbind( onChangeActive );
+
+					// @todo Determine why a delay is required.
+					delay = 100;
+					_.delay( function focusControlAfterDelay() {
+						firstControl.focus( {
+							completeCallback: function() {
+								firstControl.container.find( 'input:first' ).select();
+							}
+						} );
+					}, delay );
+				}
+			};
+			if ( section.active.get() ) {
+				onChangeActive( true );
+			} else {
+				section.active.bind( onChangeActive );
+			}
 		},
 
 		/**
