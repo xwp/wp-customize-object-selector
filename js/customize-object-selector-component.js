@@ -82,6 +82,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 							});
 							request.done( success );
 							request.fail( failure );
+							return request;
 						}
 					},
 					templateResult: function( data ) {
