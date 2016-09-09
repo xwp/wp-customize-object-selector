@@ -412,6 +412,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				component.select.trigger( 'change' );
 				deferred.resolve();
 			} else {
+				component.container.addClass( 'customize-object-selector-populating' );
+
 				request = component.queryPosts({
 					post__in: settingValues,
 					orderby: 'post__in'
@@ -444,6 +446,9 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 						component.containing_construct.notifications.add( notification.code, notification );
 					}
 					deferred.reject();
+				} );
+				request.always( function() {
+					component.container.removeClass( 'customize-object-selector-populating' );
 				} );
 			}
 			return deferred.promise();
