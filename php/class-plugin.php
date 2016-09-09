@@ -91,6 +91,9 @@ class Plugin {
 					),
 				) );
 
+				// Make sure the value is exported to JS as an integer.
+				add_filter( "customize_sanitize_js_{$selector_control->setting->id}", 'absint' );
+
 				$wp_customize->remove_control( $existing_control->id );
 				$wp_customize->add_control( $selector_control );
 			}
