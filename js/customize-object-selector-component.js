@@ -503,7 +503,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 * @returns {jQuery.promise} Resolves when complete. Rejected when failed.
 		 */
 		populateSelectOptions: function( refresh ) {
-			var component = this, request, settingValues, selectedValues, deferred = jQuery.Deferred();
+			var component = this, settingValues, selectedValues, deferred = jQuery.Deferred();
 
 			settingValues = component.getSettingValues();
 			selectedValues = component.getSelectedValues();
@@ -516,11 +516,15 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			} else {
 				component.container.addClass( 'customize-object-selector-populating' );
 
-				request = component.queryPosts({
+				if ( component.currentRequest ) {
+					component.currentRequest.abort();
+				}
+
+				component.currentRequest = component.queryPosts({
 					post__in: settingValues,
 					orderby: 'post__in'
 				});
-				request.done( function( data ) {
+				component.currentRequest.done( function( data ) {
 					if ( component.containing_construct.notifications ) {
 						component.containing_construct.notifications.remove( 'select2_init_failure' );
 					}
@@ -535,9 +539,9 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 					component.select.trigger( 'change' );
 					deferred.resolve();
 				} );
-				request.fail( function() {
+				component.currentRequest.fail( function( jqXHR, status, statusText ) {
 					var notification;
-					if ( api.Notification && component.containing_construct.notifications ) {
+					if ( 'abort' !== status && api.Notification && component.containing_construct.notifications ) {
 
 						// @todo Allow clicking on this notification to re-call populateSelectOptions()
 						// @todo The error should be triggered on the component itself so that the control adds it to its notifications. Too much coupling here.
@@ -549,7 +553,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 					}
 					deferred.reject();
 				} );
-				request.always( function() {
+				component.currentRequest.always( function() {
 					component.container.removeClass( 'customize-object-selector-populating' );
 				} );
 			}
