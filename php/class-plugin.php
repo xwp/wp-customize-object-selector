@@ -124,6 +124,17 @@ class Plugin {
 		$in_footer = 1;
 		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 
+		$l10n = array(
+			'missing_model_arg' => __( 'Missing valid model arg.', 'customize-object-selector' ),
+			/* translators: %s is the status text */
+			'failed_to_fetch_selections' => __( 'Failed to fetch selections: %s', 'customize-object-selector' ),
+		);
+		$wp_scripts->add_inline_script(
+			$handle,
+			sprintf( 'wp.customize.ObjectSelectorComponent.prototype.l10n = %s;', wp_json_encode( $l10n ) ),
+			'after'
+		);
+
 		$handle = 'customize-object-selector-control';
 		$src = plugins_url( 'js/customize-object-selector-control' . $suffix, __DIR__ );
 		$deps = array( 'customize-controls', 'customize-object-selector-component' );

@@ -1,12 +1,18 @@
 /* global JSON */
 /* eslint consistent-this: [ "error", "component" ] */
 /* eslint no-magic-numbers: ["error", { "ignore": [-1,0,1] }] */
-/* eslint complexity: ["error", 10] */
+/* eslint complexity: ["error", 11] */
 
 wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 	'use strict';
 
 	return api.Class.extend({
+
+		// Note the translations are exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
+		l10n: {
+			missing_model_arg: '',
+			failed_to_fetch_selections: ''
+		},
 
 		/**
 		 * Initialize.
@@ -28,7 +34,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			var component = this;
 
 			if ( ! args.model || 'function' !== typeof args.model.get ) {
-				throw new Error( 'Missing valid model arg.' );
+				throw new Error( component.l10n.missing_model_arg );
 			}
 			component.model = args.model;
 			component.containing_construct = args.containing_construct || null;
@@ -129,7 +135,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			// Sync the setting values with the select2 values.
 			component.model.bind( function() {
-				component.populateSelectOptions();
+				component.populateSelectOptions( false );
 			} );
 
 			component.setupSortable();
@@ -547,7 +553,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 						// @todo The error should be triggered on the component itself so that the control adds it to its notifications. Too much coupling here.
 						notification = new api.Notification( 'select2_init_failure', {
 							type: 'error',
-							message: 'Failed to fetch selections.' // @todo l10n
+							message: component.l10n.failed_to_fetch_selections.replace( '%s', statusText )
 						} );
 						component.containing_construct.notifications.add( notification.code, notification );
 					}
