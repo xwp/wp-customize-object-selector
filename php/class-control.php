@@ -34,11 +34,20 @@ class Control extends \WP_Customize_Control {
 	);
 
 	/**
-	 * Query args for posts.
+	 * Query vars for posts.
 	 *
 	 * @var array|null
 	 */
-	public $post_query_args;
+	public $post_query_vars;
+
+	/**
+	 * Whether the add buttons will be shown.
+	 *
+	 * These buttons will only appear if the Customize Posts plugin is active.
+	 *
+	 * @var bool
+	 */
+	public $show_add_buttons = true;
 
 	/**
 	 * Setting property.
@@ -94,8 +103,9 @@ class Control extends \WP_Customize_Control {
 			parent::json(),
 			wp_array_slice_assoc( get_object_vars( $this ), array(
 				'select2_options',
-				'post_query_args',
+				'post_query_vars',
 				'setting_property',
+				'show_add_buttons',
 			) )
 		);
 	}
