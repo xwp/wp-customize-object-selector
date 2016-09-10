@@ -78,7 +78,7 @@ class Plugin {
 					'post_query_vars' => array(
 						'post_type' => 'page',
 						'post_status' => 'publish',
-						'tree_args' => array(
+						'dropdown_args' => array(
 							'sort_column' => 'menu_order, post_title',
 						),
 					),
@@ -210,8 +210,8 @@ class Plugin {
 			}
 		}
 
-		if ( '' === trim( $post_query_args['s'] ) && ! empty( $post_query_args['tree_args'] ) ) {
-			$results = $this->build_post_tree( $post_query_args );
+		if ( '' === trim( $post_query_args['s'] ) && isset( $post_query_args['dropdown_args'] ) ) {
+			$results = $this->build_post_dropdown( $post_query_args );
 		} else {
 			$results = $this->query_posts( $post_query_args );
 		}
@@ -240,7 +240,7 @@ class Plugin {
 			array(
 				's' => '',
 				'paged' => 1,
-				'tree_args' => array(),
+				'dropdown_args' => array(),
 			),
 			$post_query_vars
 		);
@@ -248,7 +248,8 @@ class Plugin {
 		// Whitelist allowed query vars.
 		$allowed_query_vars = array(
 			'include_featured_images',
-			'tree_args',
+			'dropdown_args',
+			'apply_dropdown_args_filters_post_id',
 			'post_status',
 			'post_type',
 			's',
@@ -381,27 +382,11 @@ class Plugin {
 			$post_query_vars['posts_per_page'] = -1;
 		}
 
-		if ( ! is_array( $post_query_vars['tree_args'] ) ) {
+		if ( ! is_array( $post_query_vars['dropdown_args'] ) ) {
 			return new \WP_Error(
-				'bad_tree_args',
-				__( 'Expected tree_args as array', 'customize-object-selector' )
+				'bad_dropdown_args',
+				__( 'Expected dropdown_args as array', 'customize-object-selector' )
 			);
-		}
-
-		// See wp_dropdown_pages(), get_pages(), walk_page_dropdown_tree(), and the page_attributes_dropdown_pages_args filter.
-		$allowed_args = array(
-			'exclude_tree',
-			'sort_column',
-			// @todo Support more args as they are supported by Customize Posts for get_pages().
-		);
-		foreach ( array_keys( $post_query_vars['tree_args'] ) as $key ) {
-			if ( ! in_array( $key, $allowed_args, true ) ) {
-				return new \WP_Error(
-					'unsupported_tree_arg',
-					sprintf( __( 'Unsupported arg "%s" in tree_args', 'customize-object-selector' ), $key ),
-					array( 'arg' => $key )
-				);
-			}
 		}
 
 		return $post_query_vars;
@@ -414,12 +399,18 @@ class Plugin {
 	 *
 	 * @return array|\WP_Error Response data or WP_Error if error.
 	 */
-	public function build_post_tree( $post_query_args ) {
+	public function build_post_dropdown( $post_query_args ) {
 
 		if ( count( $post_query_args['post_type'] ) !== 1 ) {
 			return new \WP_Error(
-				'cannot_show_tree_for_multiple_post_types',
-				__( 'Cannot show tree for multiple post types', 'customize-object-selector' )
+				'cannot_show_dropdown_for_multiple_post_types',
+				__( 'Cannot show dropdown for multiple post types', 'customize-object-selector' )
+			);
+		}
+		if ( ! is_array( $post_query_args['dropdown_args'] ) ) {
+			return new \WP_Error(
+				'dropdown_args_not_array',
+				__( 'The dropdown_args param must be an array.', 'customize-object-selector' )
 			);
 		}
 		$post_type = $post_query_args['post_type'][0];
@@ -432,25 +423,82 @@ class Plugin {
 		$post_type_object = get_post_type_object( $post_type );
 		if ( ! $post_type_object->hierarchical ) {
 			return new \WP_Error(
-				'cannot_show_tree_for_non_hierarchical_post_type',
-				__( 'Cannot show tree for non-hierarchical post type', 'customize-object-selector' )
+				'cannot_show_dropdown_for_non_hierarchical_post_type',
+				__( 'Cannot show dropdown for non-hierarchical post type', 'customize-object-selector' )
 			);
 		}
 
 		require_once __DIR__ . '/class-post-tree-walker.php';
 		$walker = new Post_Tree_Walker();
 
-		// @todo Add support for applying page_attributes_dropdown_pages_args filters if requested.
-		$tree_args = array_merge(
-			$post_query_args['tree_args'],
+		$dropdown_args = array_merge(
 			array(
-				'post_type' => $post_query_args['post_type'][0],
 				'depth' => 0,
+			),
+			$post_query_args['dropdown_args'],
+			array(
+				'post_type' => $post_type,
 				'walker' => $walker,
 			)
 		);
-		$posts = get_pages( $tree_args );
-		walk_page_dropdown_tree( $posts, $tree_args['depth'], $tree_args );
+
+		// Apply page_attributes_dropdown_pages_args filters if context post ID is supplied.
+		if ( ! empty( $post_query_args['apply_dropdown_args_filters_post_id'] ) ) {
+			$context_post = get_post( $post_query_args['apply_dropdown_args_filters_post_id'] );
+			if ( empty( $context_post ) ) {
+				return new \WP_Error(
+					'unrecognized_apply_dropdown_args_filters_post_id',
+					__( 'Unrecognized post passed as apply_dropdown_args_filters_post_id arg.', 'customize-object-selector' )
+				);
+			}
+			if ( $context_post->post_type !== $post_type ) {
+				return new \WP_Error(
+					'type_mismatch_apply_dropdown_args_filters_post_id',
+					__( 'Post type mismatch for post passed as apply_dropdown_args_filters_post_id arg.', 'customize-object-selector' )
+				);
+			}
+
+			/** This filter is documented in wp-admin/includes/meta-boxes.php */
+			$dropdown_args = apply_filters( 'page_attributes_dropdown_pages_args', $dropdown_args, $context_post );
+
+			if ( ! ( $dropdown_args['walker'] instanceof Post_Tree_Walker ) ) {
+				return new \WP_Error(
+					'bad_tree_walker',
+					__( 'Tree walker must be subclass of CustomizeObjectSelector\Post_Tree_Walker.', 'customize-object-selector' )
+				);
+			}
+			if ( $dropdown_args['post_type'] !== $post_type ) {
+				return new \WP_Error(
+					'bad_filtered_post_type',
+					__( 'The page_attributes_dropdown_pages_args filter must not change the post_type.', 'customize-object-selector' )
+				);
+			}
+		}
+
+		// See wp_dropdown_pages(), get_pages(), walk_page_dropdown_tree(), and the page_attributes_dropdown_pages_args filter.
+		$unsupported_args = array(
+			'meta_key',
+			'meta_value',
+			'offset',
+		);
+		foreach ( array_keys( $dropdown_args ) as $key ) {
+			if ( in_array( $key, $unsupported_args, true ) ) {
+				return new \WP_Error(
+					'unsupported_dropdown_pages_arg',
+					sprintf( __( 'Unsupported arg "%s" in dropdown_args or supplied by page_attributes_dropdown_pages_args filter', 'customize-object-selector' ), $key ),
+					array( 'arg' => $key )
+				);
+			}
+		}
+
+		$posts = get_pages( $dropdown_args );
+		if ( ! is_array( $posts ) ) {
+			return new \WP_Error(
+				'get_pages_error',
+				__( 'The get_pages() call returned false.', 'customize-object-selector' )
+			);
+		}
+		walk_page_dropdown_tree( $posts, $dropdown_args['depth'], $dropdown_args );
 
 		$results = array();
 		foreach ( $walker->items as $item ) {
