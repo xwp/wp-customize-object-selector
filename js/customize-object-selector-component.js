@@ -83,7 +83,15 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 								paged: params.data.page || 1
 							});
 							request.done( success );
-							request.fail( failure );
+							request.fail( function( jqXHR, status ) {
+
+								// Inform select2 of aborts. See <https://github.com/select2/select2/blob/062c6c3af5f0f39794c34c0a343a3857e587cc97/src/js/select2/data/ajax.js#L83-L87>.
+								if ( 'abort' === status ) {
+									request.status = '0';
+								}
+
+								failure.apply( request, arguments );
+							} );
 							return request;
 						}
 					},
