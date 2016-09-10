@@ -78,6 +78,7 @@ class Plugin {
 					'post_query_vars' => array(
 						'post_type' => 'page',
 						'post_status' => 'publish',
+						'show_initial_dropdown' => true,
 						'dropdown_args' => array(
 							'sort_column' => 'menu_order, post_title',
 						),
@@ -210,7 +211,7 @@ class Plugin {
 			}
 		}
 
-		if ( '' === trim( $post_query_args['s'] ) && isset( $post_query_args['dropdown_args'] ) ) {
+		if ( '' === trim( $post_query_args['s'] ) && ! empty( $post_query_args['show_initial_dropdown'] ) ) {
 			$results = $this->build_post_dropdown( $post_query_args );
 		} else {
 			$results = $this->query_posts( $post_query_args );
@@ -240,6 +241,7 @@ class Plugin {
 			array(
 				's' => '',
 				'paged' => 1,
+				'show_initial_dropdown' => false,
 				'dropdown_args' => array(),
 			),
 			$post_query_vars
@@ -248,6 +250,7 @@ class Plugin {
 		// Whitelist allowed query vars.
 		$allowed_query_vars = array(
 			'include_featured_images',
+			'show_initial_dropdown',
 			'dropdown_args',
 			'apply_dropdown_args_filters_post_id',
 			'post_status',
@@ -381,6 +384,8 @@ class Plugin {
 		if ( ! empty( $post_query_vars['post__in'] ) ) {
 			$post_query_vars['posts_per_page'] = -1;
 		}
+
+		$post_query_vars['show_initial_dropdown'] = ! empty( $post_query_vars['show_initial_dropdown'] );
 
 		if ( ! is_array( $post_query_vars['dropdown_args'] ) ) {
 			return new \WP_Error(
