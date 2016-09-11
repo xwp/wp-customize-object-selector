@@ -44,7 +44,7 @@ class Plugin {
 		add_action( 'wp_default_styles', array( $this, 'register_styles' ), 100 );
 
 		add_action( 'customize_register', array( $this, 'register_control_type' ), 9 );
-		add_action( 'customize_register', array( $this, 'replace_dropdown_pages_controls' ), 11 );
+		add_action( 'customize_register', array( $this, 'replace_dropdown_pages_controls' ), 20 );
 
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customize_controls_enqueue_scripts' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
@@ -87,7 +87,7 @@ class Plugin {
 						'multiple' => false,
 						'allowClear' => true,
 						// @codingStandardsIgnoreStart
-						'placeholder' => __( '&mdash; Select &mdash;', 'default' ), // @todo WPCS's WordPress.WP.I18n.TextDomainMismatch sniff should allow default.
+						'placeholder' => __( '&mdash; Select &mdash;', 'default' ), // @todo WPCS's WordPress.WP.I18n.TextDomainMismatch sniff should allow default. See <https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/pull/685>.
 						// @codingStandardsIgnoreEnd
 					),
 				) );
@@ -140,6 +140,12 @@ class Plugin {
 		$deps = array( 'customize-controls', 'customize-object-selector-component' );
 		$in_footer = 1;
 		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
+
+		$handle = 'customize-object-selector-static-front-page';
+		$src = plugins_url( 'js/customize-object-selector-static-front-page' . $suffix, __DIR__ );
+		$deps = array( 'customize-object-selector-control' );
+		$in_footer = 1;
+		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 	}
 
 	/**
@@ -166,10 +172,18 @@ class Plugin {
 
 	/**
 	 * Enqueue controls scripts.
+	 *
+	 * @global \WP_Customize_Manager $wp_customize Manager.
 	 */
 	public function customize_controls_enqueue_scripts() {
+		global $wp_customize;
+
 		wp_enqueue_script( 'customize-object-selector-control' );
 		wp_enqueue_style( 'customize-object-selector-control' );
+
+		if ( $wp_customize->get_section( 'static_front_page' ) ) {
+			wp_enqueue_script( 'customize-object-selector-static-front-page' );
+		}
 	}
 
 	/**

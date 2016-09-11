@@ -44,7 +44,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				multiple: false
 			};
 			if ( args.select2_options ) {
-				_.extend( component.select2_options, args.select2_options );
+				component.select2_options = args.select2_options;
 			}
 			component.container = args.container;
 			component.post_query_vars = null;
@@ -55,8 +55,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			component.select2_selection_template = args.select2_selection_template || wp.template( 'customize-object-selector-item' );
 
 			if ( args.post_query_vars ) {
-				component.post_query_vars = {};
-				_.extend( component.post_query_vars, args.post_query_vars );
+				component.post_query_vars = args.post_query_vars;
 			}
 		},
 
