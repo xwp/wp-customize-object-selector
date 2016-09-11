@@ -140,6 +140,12 @@ class Plugin {
 		$deps = array( 'customize-controls', 'customize-object-selector-component' );
 		$in_footer = 1;
 		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
+
+		$handle = 'customize-object-selector-static-front-page';
+		$src = plugins_url( 'js/customize-object-selector-static-front-page' . $suffix, __DIR__ );
+		$deps = array( 'customize-object-selector-control' );
+		$in_footer = 1;
+		$wp_scripts->add( $handle, $src, $deps, $this->version, $in_footer );
 	}
 
 	/**
@@ -166,10 +172,18 @@ class Plugin {
 
 	/**
 	 * Enqueue controls scripts.
+	 *
+	 * @global \WP_Customize_Manager $wp_customize Manager.
 	 */
 	public function customize_controls_enqueue_scripts() {
+		global $wp_customize;
+
 		wp_enqueue_script( 'customize-object-selector-control' );
 		wp_enqueue_style( 'customize-object-selector-control' );
+
+		if ( $wp_customize->get_section( 'static_front_page' ) ) {
+			wp_enqueue_script( 'customize-object-selector-static-front-page' );
+		}
 	}
 
 	/**
