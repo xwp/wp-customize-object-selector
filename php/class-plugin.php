@@ -86,9 +86,7 @@ class Plugin {
 					'select2_options' => array(
 						'multiple' => false,
 						'allowClear' => true,
-						// @codingStandardsIgnoreStart
-						'placeholder' => __( '&mdash; Select &mdash;', 'default' ), // @todo WPCS's WordPress.WP.I18n.TextDomainMismatch sniff should allow default. See <https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/pull/685>.
-						// @codingStandardsIgnoreEnd
+						'placeholder' => __( '&mdash; Select &mdash;', 'default' ),
 					),
 				) );
 
