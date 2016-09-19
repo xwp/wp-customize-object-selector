@@ -71,7 +71,7 @@ class Plugin {
 		$control_ids = array( 'page_on_front', 'page_for_posts' );
 		foreach ( $control_ids as $control_id ) {
 			$existing_control = $wp_customize->get_control( $control_id );
-			if ( $existing_control ) {
+			if ( $existing_control && 'dropdown-pages' === $existing_control->type ) {
 				$selector_control = new Control( $wp_customize, $existing_control->id, array(
 					'label' => $existing_control->label,
 					'section' => $existing_control->section,
