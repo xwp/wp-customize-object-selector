@@ -71,7 +71,7 @@ class Plugin {
 		$control_ids = array( 'page_on_front', 'page_for_posts' );
 		foreach ( $control_ids as $control_id ) {
 			$existing_control = $wp_customize->get_control( $control_id );
-			if ( $existing_control ) {
+			if ( $existing_control && 'dropdown-pages' === $existing_control->type ) {
 				$selector_control = new Control( $wp_customize, $existing_control->id, array(
 					'label' => $existing_control->label,
 					'section' => $existing_control->section,
@@ -126,6 +126,7 @@ class Plugin {
 			'missing_model_arg' => __( 'Missing valid model arg.', 'customize-object-selector' ),
 			/* translators: %s is the status text */
 			'failed_to_fetch_selections' => __( 'Failed to fetch selections: %s', 'customize-object-selector' ),
+			'add_new_buttons_customize_posts_dependency' => __( '[Customize Object Selector] The show_add_buttons option depends on the Customize Posts plugin v0.8.0.', 'customize-object-selector' ),
 		);
 		$wp_scripts->add_inline_script(
 			$handle,

@@ -1,4 +1,4 @@
-/* global JSON */
+/* global JSON, console */
 /* eslint consistent-this: [ "error", "component" ] */
 /* eslint no-magic-numbers: ["error", { "ignore": [-1,0,1] }] */
 /* eslint complexity: ["error", 11] */
@@ -11,7 +11,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		// Note the translations are exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
 		l10n: {
 			missing_model_arg: '',
-			failed_to_fetch_selections: ''
+			failed_to_fetch_selections: '',
+			add_new_buttons_customize_posts_dependency: ''
 		},
 
 		/**
@@ -49,6 +50,12 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			component.container = args.container;
 			component.post_query_vars = null;
 			component.show_add_buttons = _.isUndefined( args.show_add_buttons ) ? true : args.show_add_buttons;
+			if ( component.show_add_buttons && ( ! api.Posts || ! _.isFunction( api.Posts.startCreatePostFlow ) ) ) {
+				if ( 'undefined' !== typeof console && _.isFunction( console.warn ) ) {
+					console.warn( component.l10n.add_new_buttons_customize_posts_dependency );
+				}
+				component.show_add_buttons = false;
+			}
 			component.select_id = args.select_id || '';
 			component.control_template = args.control_template || wp.template( 'customize-object-selector-component' );
 			component.select2_result_template = args.select2_result_template || wp.template( 'customize-object-selector-item' );
@@ -139,7 +146,9 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			component.setupSortable();
 
-			component.setupAddNewButtons();
+			if ( api.Posts && _.isFunction( api.Posts.startCreatePostFlow ) ) {
+				component.setupAddNewButtons();
+			}
 
 			component.repopulateSelectOptionsForSettingChange = _.bind( component.repopulateSelectOptionsForSettingChange, component );
 			api.bind( 'change', component.repopulateSelectOptionsForSettingChange );
@@ -346,55 +355,16 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			// Set up the add new post buttons
 			component.container.on( 'click', '.add-new-post-button', function() {
-				var promise, button, postTypeObj, postType;
-				postType = $( this ).data( 'postType' );
-				button = $( this );
-				button.prop( 'disabled', true );
-				postTypeObj = api.Posts.data.postTypes[ postType ];
-				promise = api.Posts.insertAutoDraftPost( postType );
+				var button = $( this );
 
-				promise.done( function( data ) {
-					var returnPromise, postData, returnUrl = null, watchPreviewUrlChange;
-					data.section.focus();
-
-					if ( ! component.containing_construct ) {
-						return;
-					}
-
-					// Navigate to the newly-created post if it is public; otherwise, refresh the preview.
-					if ( postTypeObj['public'] ) {
-						returnUrl = api.previewer.previewUrl.get();
-						api.previewer.previewUrl( api.Posts.getPreviewUrl( {
-							post_type: postType,
-							post_id: data.postId
-						} ) );
-					} else {
-						api.previewer.refresh();
-					}
-
-					// Set initial post data.
-					postData = {};
-					if ( postTypeObj.supports.title ) {
-						postData.post_title = api.Posts.data.l10n.noTitle;
-					}
-					data.setting.set( _.extend(
-						{},
-						data.setting.get(),
-						postData
-					) );
-
-					// Clear out the return URL if the preview URL was changed when editing the newly-created post.
-					watchPreviewUrlChange = function() {
-						returnUrl = null;
-					};
-					api.previewer.previewUrl.bind( watchPreviewUrlChange );
-
-					returnPromise = component.focusConstructWithBreadcrumb( data.section, component.containing_construct );
-					returnPromise.done( function() {
+				api.Posts.startCreatePostFlow( {
+					postType: $( this ).data( 'postType' ),
+					initiatingButton: button,
+					originatingConstruct: component.containing_construct,
+					restorePreviousUrl: true,
+					returnToOriginatingConstruct: true,
+					breadcrumbReturnCallback: function( data ) {
 						var values;
-
-						api.previewer.previewUrl.unbind( watchPreviewUrlChange );
-
 						if ( 'publish' === data.setting.get().post_status ) {
 							values = component.getSettingValues().slice( 0 );
 							if ( ! component.select2_options.multiple ) {
@@ -409,96 +379,9 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 							}
 							component.setSettingValues( values );
 						}
-						button.focus(); // @todo Focus on the select2?
-
-						// Return to the previewed URL.
-						if ( returnUrl ) {
-							api.previewer.previewUrl( returnUrl );
-						}
-					} );
-				} );
-
-				promise.always( function() {
-					button.prop( 'disabled', false );
-				} );
-			} );
-		},
-
-		/**
-		 * Focus (expand) one construct and then focus on another construct after the first is collapsed.
-		 *
-		 * This overrides the back button to serve the purpose of breadcrumb navigation.
-		 * This is modified from WP Core.
-		 *
-		 * @link https://github.com/xwp/wordpress-develop/blob/e7bbb482d6069d9c2d0e33789c7d290ac231f056/src/wp-admin/js/customize-widgets.js#L2143-L2193
-		 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} focusConstruct - The object to initially focus.
-		 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} returnConstruct - The object to return focus.
-		 * @returns {void}
-		 */
-		focusConstructWithBreadcrumb: function focusConstructWithBreadcrumb( focusConstruct, returnConstruct ) {
-			var component = this, deferred = $.Deferred(), onceCollapsed;
-			focusConstruct.focus( {
-				completeCallback: function() {
-					if ( focusConstruct.extended( api.Section ) ) {
-						/*
-						 * Note the defer is because the controls get embedded
-						 * once the section is expanded and also because it seems
-						 * that focus fails when the input is not visible yet.
-						 */
-						_.defer( function() {
-							component.focusFirstSectionControlOnceFocusable( focusConstruct );
-						} );
 					}
-				}
+				} );
 			} );
-			onceCollapsed = function( isExpanded ) {
-				if ( ! isExpanded ) {
-					focusConstruct.expanded.unbind( onceCollapsed );
-					returnConstruct.focus( {
-						completeCallback: function() {
-							deferred.resolve();
-						}
-					} );
-				}
-			};
-			focusConstruct.expanded.bind( onceCollapsed );
-			return deferred;
-		},
-
-		/**
-		 * Perform a dance to focus on the first control in the section.
-		 *
-		 * There is a race condition where focusing on a control too
-		 * early can result in the focus logic not being able to see
-		 * any visible inputs to focus on.
-		 *
-		 * @param {wp.customize.Section} section Section.
-		 */
-		focusFirstSectionControlOnceFocusable: function focusFirstSectionControlOnceFocusable( section ) {
-			var firstControl = section.controls()[0], onChangeActive, delay;
-			if ( ! firstControl ) {
-				return;
-			}
-			onChangeActive = function _onChangeActive( isActive ) {
-				if ( isActive ) {
-					section.active.unbind( onChangeActive );
-
-					// @todo Determine why a delay is required.
-					delay = 100;
-					_.delay( function focusControlAfterDelay() {
-						firstControl.focus( {
-							completeCallback: function() {
-								firstControl.container.find( 'input:first' ).select();
-							}
-						} );
-					}, delay );
-				}
-			};
-			if ( section.active.get() ) {
-				onChangeActive( true );
-			} else {
-				section.active.bind( onChangeActive );
-			}
 		},
 
 		/**
