@@ -25,6 +25,29 @@ For an example integration with the Customize Posts plugin, see pending usage as
 
 == Changelog ==
 
+= 0.3.0 (Unreleased) =
+
+Added:
+
+* Add support for emulating `wp_dropdown_pages()`. The options for a dropdown are fetched via a call to `get_pages()`, and these dropdown options are displayed when no search is entered and `show_initial_dropdown: true` is passed among the `post_query_vars`. The arguments for `wp_dropdown_pages()` can then be passed via the `dropdown_args` query var.
+* Replace `page_on_front` and `page_for_posts` controls with object selector controls emulating `wp_dropdown_pages()`.
+* Add a control param for `show_add_buttons` to control whether or not the add buttons are shown (if Customize Posts is active).
+* Eliminates code in `setupAddNewButtons` in favor of re-using `startCreatePostFlow` code now in Customize Posts 0.8.0. This sets the initial placeholder title for created posts and navigate to url in preview.
+* Show loading indicator while re-population is happening.
+* Prevent `page_on_front` and `page_for_posts` from being set the same.
+* Ensure strings are translatable.
+* Add banner and icon assets.
+
+Fixed:
+
+* Update `post_query_args` to `post_query_vars` in PHP.
+* Prevent `post__in` from causing `posts_per_page` to be set too early.
+* Skip calling close on select2 if element already gone. Fixes JS error.
+* Fix issues related to syncing the setting value to the select2 value.
+* Ensure notifications are set on containing construct.
+* Fix transport implementation by returning request object.
+* Pass params from control to component by reference without cloning so that params can be adjusted on control to affect the component. (Not ideal long term.)
+
 = 0.2.0 =
 
 Initial release of fork from [Customizer Ajax Select](https://github.com/danielbachhuber/customizer-ajax-select).
