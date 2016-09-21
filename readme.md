@@ -7,8 +7,8 @@ Adds a Customizer control to select one or multiple posts (and eventually terms 
 **Contributors:** [xwp](https://profiles.wordpress.org/xwp), [westonruter](https://profiles.wordpress.org/westonruter)  
 **Tags:** [customizer](https://wordpress.org/plugins/tags/customizer), [customize](https://wordpress.org/plugins/tags/customize), [select2](https://wordpress.org/plugins/tags/select2), [posts](https://wordpress.org/plugins/tags/posts), [pages](https://wordpress.org/plugins/tags/pages), [dropdown](https://wordpress.org/plugins/tags/dropdown)  
 **Requires at least:** 4.5  
-**Tested up to:** 4.6.1  
-**Stable tag:** 0.2.0  
+**Tested up to:** 4.7-alpha  
+**Stable tag:** 0.3.0  
 **License:** [GPLv2 or later](http://www.gnu.org/licenses/gpl-2.0.html)  
 
 [![Build Status](https://travis-ci.org/xwp/wp-customize-object-selector.svg?branch=master)](https://travis-ci.org/xwp/wp-customize-object-selector) [![Built with Grunt](https://cdn.gruntjs.com/builtwith.svg)](http://gruntjs.com) 
@@ -27,9 +27,11 @@ For an example integration with widgets, see the [Post Collection widget](https:
 
 For an example integration with the Customize Posts plugin, see pending usage as the [Post Parent control](https://github.com/xwp/wp-customize-posts/pull/189#issuecomment-241216247).
 
+**Development of this plugin is done [on GitHub](https://github.com/xwp/wp-customize-object-selector). Pull requests welcome. Please see [issues](https://github.com/xwp/wp-customize-object-selector/issues) reported there before going to the [plugin forum](https://wordpress.org/support/plugin/customize-object-selector).**
+
 ## Changelog ##
 
-### 0.3.0 (Unreleased) ###
+### 0.3.0 - 2016-09-21 ###
 Added:
 
 * Add support for emulating `wp_dropdown_pages()`. The options for a dropdown are fetched via a call to `get_pages()`, and these dropdown options are displayed when no search is entered and `show_initial_dropdown: true` is passed among the `post_query_vars`. The arguments for `wp_dropdown_pages()` can then be passed via the `dropdown_args` query var.

@@ -2,8 +2,8 @@
 Contributors:      xwp, westonruter
 Tags:              customizer, customize, select2, posts, pages, dropdown
 Requires at least: 4.5
-Tested up to:      4.6.1
-Stable tag:        0.2.0
+Tested up to:      4.7-alpha
+Stable tag:        0.3.0
 License:           GPLv2 or later
 License URI:       http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,9 +23,11 @@ For an example integration with widgets, see the [Post Collection widget](https:
 
 For an example integration with the Customize Posts plugin, see pending usage as the [Post Parent control](https://github.com/xwp/wp-customize-posts/pull/189#issuecomment-241216247).
 
+**Development of this plugin is done [on GitHub](https://github.com/xwp/wp-customize-object-selector). Pull requests welcome. Please see [issues](https://github.com/xwp/wp-customize-object-selector/issues) reported there before going to the [plugin forum](https://wordpress.org/support/plugin/customize-object-selector).**
+
 == Changelog ==
 
-= 0.3.0 (Unreleased) =
+= 0.3.0 - 2016-09-21 =
 
 Added:
 
