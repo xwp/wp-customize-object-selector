@@ -6,3 +6,8 @@
 	width: auto;
 	vertical-align: middle;
 }
+
+/* @todo A spinner would be better here */
+.customize-object-selector-populating {
+	opacity: 0.5;
+}

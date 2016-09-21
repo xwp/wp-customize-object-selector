@@ -1,12 +1,19 @@
-/* global JSON */
+/* global JSON, console */
 /* eslint consistent-this: [ "error", "component" ] */
-/* eslint no-magic-numbers: ["error", { "ignore": [0,1] }] */
-/* eslint complexity: ["error", 10] */
+/* eslint no-magic-numbers: ["error", { "ignore": [-1,0,1] }] */
+/* eslint complexity: ["error", 11] */
 
 wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 	'use strict';
 
 	return api.Class.extend({
+
+		// Note the translations are exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
+		l10n: {
+			missing_model_arg: '',
+			failed_to_fetch_selections: '',
+			add_new_buttons_customize_posts_dependency: ''
+		},
 
 		/**
 		 * Initialize.
@@ -20,14 +27,15 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 * @param {object}   args.select2_options - See available options at https://select2.github.io/examples.html#programmatic-control
 		 * @param {boolean}  args.select2_options.multiple - Whether multiple can be selected.
 		 * @param {string}   args.select_id - ID to be used for the underlying select element
-		 * @param {object}   args.post_query_vars - WP_Query vars to use in the query, opon which 's' and 'paged' will be merged.
+		 * @param {object}   args.post_query_vars - WP_Query vars to use in the query, upon which 's' and 'paged' will be merged.
+		 * @param {Boolean}  args.show_add_buttons - Whether add buttons will be shown if available.
 		 * @returns {void}
 		 */
 		initialize: function initialize( args ) {
 			var component = this;
 
 			if ( ! args.model || 'function' !== typeof args.model.get ) {
-				throw new Error( 'Missing valid model arg.' );
+				throw new Error( component.l10n.missing_model_arg );
 			}
 			component.model = args.model;
 			component.containing_construct = args.containing_construct || null;
@@ -37,18 +45,24 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				multiple: false
 			};
 			if ( args.select2_options ) {
-				_.extend( component.select2_options, args.select2_options );
+				component.select2_options = args.select2_options;
 			}
 			component.container = args.container;
 			component.post_query_vars = null;
+			component.show_add_buttons = _.isUndefined( args.show_add_buttons ) ? true : args.show_add_buttons;
+			if ( component.show_add_buttons && ( ! api.Posts || ! _.isFunction( api.Posts.startCreatePostFlow ) ) ) {
+				if ( 'undefined' !== typeof console && _.isFunction( console.warn ) ) {
+					console.warn( component.l10n.add_new_buttons_customize_posts_dependency );
+				}
+				component.show_add_buttons = false;
+			}
 			component.select_id = args.select_id || '';
 			component.control_template = args.control_template || wp.template( 'customize-object-selector-component' );
 			component.select2_result_template = args.select2_result_template || wp.template( 'customize-object-selector-item' );
 			component.select2_selection_template = args.select2_selection_template || wp.template( 'customize-object-selector-item' );
 
 			if ( args.post_query_vars ) {
-				component.post_query_vars = {};
-				_.extend( component.post_query_vars, args.post_query_vars );
+				component.post_query_vars = args.post_query_vars;
 			}
 		},
 
@@ -66,7 +80,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			templateData = {
 				multiple: component.multiple,
 				select_id: component.select_id,
-				addable_post_types: component.getAddableQueriedPostTypes()
+				addable_post_types: component.show_add_buttons ? component.getAddableQueriedPostTypes() : []
 			};
 
 			component.container.empty().append( component.control_template( templateData ) );
@@ -81,7 +95,16 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 								paged: params.data.page || 1
 							});
 							request.done( success );
-							request.fail( failure );
+							request.fail( function( jqXHR, status ) {
+
+								// Inform select2 of aborts. See <https://github.com/select2/select2/blob/062c6c3af5f0f39794c34c0a343a3857e587cc97/src/js/select2/data/ajax.js#L83-L87>.
+								if ( 'abort' === status ) {
+									request.status = '0';
+								}
+
+								failure.apply( request, arguments );
+							} );
+							return request;
 						}
 					},
 					templateResult: function( data ) {
@@ -118,12 +141,14 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			// Sync the setting values with the select2 values.
 			component.model.bind( function() {
-				component.populateSelectOptions();
+				component.populateSelectOptions( false );
 			} );
 
 			component.setupSortable();
 
-			component.setupAddNewButtons();
+			if ( api.Posts && _.isFunction( api.Posts.startCreatePostFlow ) ) {
+				component.setupAddNewButtons();
+			}
 
 			component.repopulateSelectOptionsForSettingChange = _.bind( component.repopulateSelectOptionsForSettingChange, component );
 			api.bind( 'change', component.repopulateSelectOptionsForSettingChange );
@@ -131,6 +156,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 		/**
 		 * Repopulate select2 options for relevant setting change.
+		 *
+		 * @todo Debounce.
 		 *
 		 * @param {wp.customize.Setting} changedSetting Setting.
 		 * @returns {void}
@@ -140,7 +167,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			matches = changedSetting.id.match( /^post\[[^\]]+]\[(\d+)]/ );
 			if ( matches ) {
 				postId = parseInt( matches[1], 10 );
-				if ( _.isArray( value ) ? $.inArray( postId, value ) : postId === value ) {
+				if ( _.isArray( value ) ? -1 !== $.inArray( postId, value ) : postId === value ) {
 					component.populateSelectOptions( true );
 				}
 			}
@@ -319,6 +346,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		/**
 		 * Setup buttons for adding new posts.
 		 *
+		 * See wp.customize.Posts.PostsPanel.prototype.onClickAddPostButton
+		 *
 		 * @returns {void}
 		 */
 		setupAddNewButtons: function setupAddNewButtons() {
@@ -326,20 +355,15 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			// Set up the add new post buttons
 			component.container.on( 'click', '.add-new-post-button', function() {
-				var promise, button;
-				button = $( this );
-				button.prop( 'disabled', true );
-				promise = api.Posts.insertAutoDraftPost( $( this ).data( 'postType' ) );
+				var button = $( this );
 
-				promise.done( function( data ) {
-					var returnPromise;
-					data.section.focus();
-
-					if ( ! component.containing_construct ) {
-						return;
-					}
-					returnPromise = component.focusConstructWithBreadcrumb( data.section, component.containing_construct );
-					returnPromise.done( function() {
+				api.Posts.startCreatePostFlow( {
+					postType: $( this ).data( 'postType' ),
+					initiatingButton: button,
+					originatingConstruct: component.containing_construct,
+					restorePreviousUrl: true,
+					returnToOriginatingConstruct: true,
+					breadcrumbReturnCallback: function( data ) {
 						var values;
 						if ( 'publish' === data.setting.get().post_status ) {
 							values = component.getSettingValues().slice( 0 );
@@ -355,42 +379,9 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 							}
 							component.setSettingValues( values );
 						}
-						button.focus(); // @todo Focus on the select2?
-					} );
-				} );
-
-				promise.always( function() {
-					button.prop( 'disabled', false );
+					}
 				} );
 			} );
-		},
-
-		/**
-		 * Focus (expand) one construct and then focus on another construct after the first is collapsed.
-		 *
-		 * This overrides the back button to serve the purpose of breadcrumb navigation.
-		 * This is modified from WP Core.
-		 *
-		 * @link https://github.com/xwp/wordpress-develop/blob/e7bbb482d6069d9c2d0e33789c7d290ac231f056/src/wp-admin/js/customize-widgets.js#L2143-L2193
-		 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} focusConstruct - The object to initially focus.
-		 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} returnConstruct - The object to return focus.
-		 * @returns {void}
-		 */
-		focusConstructWithBreadcrumb: function focusConstructWithBreadcrumb( focusConstruct, returnConstruct ) {
-			var deferred = $.Deferred(), onceCollapsed;
-			focusConstruct.focus();
-			onceCollapsed = function( isExpanded ) {
-				if ( ! isExpanded ) {
-					focusConstruct.expanded.unbind( onceCollapsed );
-					returnConstruct.focus( {
-						completeCallback: function() {
-							deferred.resolve();
-						}
-					} );
-				}
-			};
-			focusConstruct.expanded.bind( onceCollapsed );
-			return deferred;
 		},
 
 		/**
@@ -400,7 +391,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 * @returns {jQuery.promise} Resolves when complete. Rejected when failed.
 		 */
 		populateSelectOptions: function( refresh ) {
-			var component = this, request, settingValues, selectedValues, deferred = jQuery.Deferred();
+			var component = this, settingValues, selectedValues, deferred = jQuery.Deferred();
 
 			settingValues = component.getSettingValues();
 			selectedValues = component.getSelectedValues();
@@ -411,35 +402,47 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				component.select.trigger( 'change' );
 				deferred.resolve();
 			} else {
-				request = component.queryPosts({
+				component.container.addClass( 'customize-object-selector-populating' );
+
+				if ( component.currentRequest ) {
+					component.currentRequest.abort();
+				}
+
+				component.currentRequest = component.queryPosts({
 					post__in: settingValues,
 					orderby: 'post__in'
 				});
-				request.done( function( data ) {
-					if ( component.notifications ) {
-						component.notifications.remove( 'select2_init_failure' );
+				component.currentRequest.done( function( data ) {
+					if ( component.containing_construct.notifications ) {
+						component.containing_construct.notifications.remove( 'select2_init_failure' );
 					}
 					component.select.empty();
 					_.each( data.results, function( item ) {
-						var option = new Option( component.select2_result_template( item ), item.id, true, true );
+						var selected, option;
+						selected = -1 !== $.inArray( item.id, settingValues );
+						option = new Option( component.select2_result_template( item ), item.id, selected, selected );
 						option.title = item.title;
 						component.select.append( option );
 					} );
 					component.select.trigger( 'change' );
 					deferred.resolve();
 				} );
-				request.fail( function() {
+				component.currentRequest.fail( function( jqXHR, status, statusText ) {
 					var notification;
-					if ( api.Notification && component.notifications ) {
+					if ( 'abort' !== status && api.Notification && component.containing_construct.notifications ) {
 
 						// @todo Allow clicking on this notification to re-call populateSelectOptions()
+						// @todo The error should be triggered on the component itself so that the control adds it to its notifications. Too much coupling here.
 						notification = new api.Notification( 'select2_init_failure', {
 							type: 'error',
-							message: 'Failed to fetch selections.' // @todo l10n
+							message: component.l10n.failed_to_fetch_selections.replace( '%s', statusText )
 						} );
-						component.notifications.add( notification.code, notification );
+						component.containing_construct.notifications.add( notification.code, notification );
 					}
 					deferred.reject();
+				} );
+				component.currentRequest.always( function() {
+					component.container.removeClass( 'customize-object-selector-populating' );
 				} );
 			}
 			return deferred.promise();
@@ -454,7 +457,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			var component = this;
 
 			api.unbind( 'change', component.repopulateSelectOptionsForSettingChange );
-			if ( component.select ) {
+			if ( component.select && component.select.data( 'select2' ) ) {
 				component.select.select2( 'close' );
 			}
 			if ( component.container ) {
