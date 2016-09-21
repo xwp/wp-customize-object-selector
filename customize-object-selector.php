@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Customize Object Selector
- * Version: 0.3.0-beta
+ * Version: 0.3.0
  * Description: Adds a Customizer control to select posts (and eventually terms and users). Forked from Daniel Bachhuber's <a href="https://github.com/danielbachhuber/customizer-ajax-select">Customizer Ajax Select</a>.
  * Author: XWP
  * Plugin URI: https://github.com/xwp/wp-customize-object-selector
