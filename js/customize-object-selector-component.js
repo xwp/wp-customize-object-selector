@@ -395,12 +395,13 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			// Set up the add new post buttons
 			component.container.on( 'click', '.select2-selection__choice__edit', function( e ) {
-				e.preventDefault();
 				var $elm = $( this ), postId;
+
+				e.preventDefault();
 				component.select.select2( 'close' );
 				component.select.prop( 'disabled', true );
 				postId = $( this ).data( 'postId' );
-				
+
 				api.Posts.startEditPostFlow( {
 					postId: parseInt( postId, 10 ),
 					initiatingButton: $elm,
