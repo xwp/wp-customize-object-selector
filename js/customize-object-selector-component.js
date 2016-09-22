@@ -401,6 +401,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				component.select.select2( 'close' );
 				component.select.prop( 'disabled', true );
 				postId = $( this ).data( 'postId' );
+				$elm.addClass( 'loading' );
 
 				api.Posts.startEditPostFlow( {
 					postId: parseInt( postId, 10 ),
@@ -410,6 +411,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 					returnToOriginatingConstruct: true,
 					breadcrumbReturnCallback: function() {
 						component.setSettingValues( component.getSettingValues().slice( 0 ) );
+						$elm.removeClass( 'loading' );
 						component.select.prop( 'disabled', false );
 						component.containing_construct.focus();
 					}

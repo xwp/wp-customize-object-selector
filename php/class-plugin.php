@@ -163,7 +163,7 @@ class Plugin {
 			$wp_styles->add( $handle, $src, $deps, $this->version );
 		}
 
-		$handle = 'customize-object-selector';
+		$handle = 'customize-object-selector-control';
 		$src = plugins_url( 'css/customize-object-selector' . $suffix, __DIR__ );
 		$deps = array( 'customize-controls', 'select2' );
 		$wp_styles->add( $handle, $src, $deps, $this->version );
@@ -663,13 +663,13 @@ class Plugin {
 			</select>
 
 			<# if ( ! _.isEmpty( data.addable_post_types ) ) { #>
-				<span class="add-new-post">
 					<# _.each( data.addable_post_types, function( addable_post_type ) { #>
-						<button type="button" class="button secondary-button add-new-post-button" data-post-type="{{ addable_post_type.post_type }}">
-							{{ addable_post_type.add_button_label }}
+						<button class="button-secondary add-new-post-stub add-new-post-button" data-post-type="{{ addable_post_type.post_type }}">
+							<span class="screen-reader-text">
+								{{ addable_post_type.post_type }}
+							</span>
 						</button>
 					<# } ) #>
-				</span>
 			<# } #>
 		</script>
 

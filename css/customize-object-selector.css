@@ -29,3 +29,14 @@
 .customize-object-selector-populating {
 	opacity: 0.5;
 }
+
+.customize-object-selector-container .add-new-post-stub:before {
+	content: "\f132";
+	display: inline-block;
+	position: relative;
+	font: normal 20px/1 dashicons;
+	vertical-align: middle;
+	-webkit-transition: all 0.2s;
+	transition: all 0.2s;
+	-webkit-font-smoothing: antialiased;
+}
