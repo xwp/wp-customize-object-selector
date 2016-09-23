@@ -661,7 +661,9 @@ class Plugin {
 				<# } #>
 				>
 			</select>
-
+			<button type="button" class="hidden button button-secondary single-selection select2-selection__choice__edit">
+				<span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span>
+			</button>
 			<# if ( ! _.isEmpty( data.addable_post_types ) ) { #>
 					<# _.each( data.addable_post_types, function( addable_post_type ) { #>
 						<button class="button-secondary add-new-post-stub add-new-post-button" data-post-type="{{ addable_post_type.post_type }}">
@@ -678,11 +680,11 @@ class Plugin {
 				<span class="select2-thumbnail-wrapper">
 					<img src="{{ data.featured_image.sizes.thumbnail.url }}">
 					{{{ data.text }}}
-					<# if ( data.element ) { #>
+					<# if ( data.element && data.multiple ) { #>
 					<span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span></span>
 					<# } #>
 				</span>
-			<# } else if ( data.element ) { #>
+			<# } else if ( data.element && data.multiple ) { #>
 					{{{ data.text }}} <span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span></span>
 			<# } else { #>
 				<# if ( data.depth ) { #>

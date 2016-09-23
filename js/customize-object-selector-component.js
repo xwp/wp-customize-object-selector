@@ -111,6 +111,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 						return $.trim( component.select2_result_template( data ) );
 					},
 					templateSelection: function( data ) {
+						data.multiple = component.select2_options.multiple;
 						return $.trim( component.select2_selection_template( data ) );
 					},
 					escapeMarkup: function( m ) {
@@ -391,20 +392,32 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 * @returns {void}
 		 */
 		setupEditLinks: function setupEditLinks() {
-			var component = this;
+			var component = this, editButton, onSelect;
+
+			editButton = component.container.find( '.select2-selection__choice__edit' );
+			onSelect = function( pageId ) {
+				editButton.toggle( ( 0 !== parseInt( pageId, 10 ) ) && ! component.select2_options.multiple );
+			};
+			onSelect( component.model.get() );
+			component.model.bind( onSelect );
 
 			// Set up the add new post buttons
 			component.container.on( 'click', '.select2-selection__choice__edit', function( e ) {
 				var $elm = $( this ), postId;
 
+				if ( component.select2_options.multiple ) {
+					postId = $elm.data( 'postId' );
+				} else {
+					postId = parseInt( component.model.get(), 10 );
+				}
+
 				e.preventDefault();
 				component.select.select2( 'close' );
 				component.select.prop( 'disabled', true );
-				postId = $( this ).data( 'postId' );
 				$elm.addClass( 'loading' );
 
 				api.Posts.startEditPostFlow( {
-					postId: parseInt( postId, 10 ),
+					postId: postId,
 					initiatingButton: $elm,
 					originatingConstruct: component.containing_construct,
 					restorePreviousUrl: true,
