@@ -433,34 +433,6 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		},
 
 		/**
-		 * Focus (expand) one construct and then focus on another construct after the first is collapsed.
-		 *
-		 * This overrides the back button to serve the purpose of breadcrumb navigation.
-		 * This is modified from WP Core.
-		 *
-		 * @link https://github.com/xwp/wordpress-develop/blob/e7bbb482d6069d9c2d0e33789c7d290ac231f056/src/wp-admin/js/customize-widgets.js#L2143-L2193
-		 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} focusConstruct - The object to initially focus.
-		 * @param {wp.customize.Section|wp.customize.Panel|wp.customize.Control} returnConstruct - The object to return focus.
-		 * @returns {void}
-		 */
-		focusConstructWithBreadcrumb: function focusConstructWithBreadcrumb( focusConstruct, returnConstruct ) {
-			var deferred = $.Deferred(), onceCollapsed;
-			focusConstruct.focus();
-			onceCollapsed = function( isExpanded ) {
-				if ( ! isExpanded ) {
-					focusConstruct.expanded.unbind( onceCollapsed );
-					returnConstruct.focus( {
-						completeCallback: function() {
-							deferred.resolve();
-						}
-					} );
-				}
-			};
-			focusConstruct.expanded.bind( onceCollapsed );
-			return deferred;
-		},
-
-		/**
 		 * Re-populate the select options based on the current setting value.
 		 *
 		 * @param {boolean} refresh Whether to force the refreshing of the options.
