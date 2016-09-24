@@ -14,9 +14,15 @@
 	padding: 0 5px 1px;
 }
 
+.customize-object-selector-container .single-selection.select2-selection__choice__edit {
+	top: -1px;
+	position: relative;
+}
+
 .customize-object-selector-container .single-selection.select2-selection__choice__edit:before {
 	content: "\f464";
 	font: normal 20px/1 dashicons;
+	position: relative;
 	top: -2px;
 	vertical-align: middle;
 }

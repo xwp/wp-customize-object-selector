@@ -396,7 +396,14 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			editButton = component.container.find( '.select2-selection__choice__edit' );
 			onSelect = function( pageId ) {
-				editButton.toggle( ( 0 !== parseInt( pageId, 10 ) ) && ! component.select2_options.multiple );
+				var visible = (
+					! isNaN( parseInt( pageId ) )
+					&&
+					0 !== parseInt( pageId, 10 )
+					&&
+					! component.select2_options.multiple
+				);
+				editButton.toggle( visible );
 			};
 			onSelect( component.model.get() );
 			component.model.bind( onSelect );

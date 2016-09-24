@@ -666,9 +666,12 @@ class Plugin {
 			</button>
 			<# if ( ! _.isEmpty( data.addable_post_types ) ) { #>
 					<# _.each( data.addable_post_types, function( addable_post_type ) { #>
-						<button class="button-secondary add-new-post-stub add-new-post-button" data-post-type="{{ addable_post_type.post_type }}">
+						<#
+						var button_text = addable_post_type.add_button_label + ' ' + addable_post_type.post_type;
+						#>
+						<button class="button-secondary add-new-post-stub add-new-post-button" data-post-type="{{ addable_post_type.post_type }}" title="{{ button_text }}">
 							<span class="screen-reader-text">
-								{{ addable_post_type.post_type }}
+								{{ button_text }}
 							</span>
 						</button>
 					<# } ) #>
@@ -681,11 +684,13 @@ class Plugin {
 					<img src="{{ data.featured_image.sizes.thumbnail.url }}">
 					{{{ data.text }}}
 					<# if ( data.element && data.multiple ) { #>
-					<span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span></span>
+						<span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}">
+							<span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span>
+						</span>
 					<# } #>
 				</span>
 			<# } else if ( data.element && data.multiple ) { #>
-					{{{ data.text }}} <span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span></span>
+				{{{ data.text }}} <span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span></span>
 			<# } else { #>
 				<# if ( data.depth ) { #>
 					<#

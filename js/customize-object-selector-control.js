@@ -42,7 +42,7 @@
 				{
 					multiple: false,
 					cache: false,
-					width: '70%'
+					width: '72%'
 				},
 				args.params.select2_options
 			);
