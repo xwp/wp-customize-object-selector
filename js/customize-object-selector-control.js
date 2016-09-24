@@ -35,11 +35,14 @@
 				args.params.post_query_vars = args.params.post_query_args;
 			}
 
+			if ( true === args.params.select2_options.multiple ) {
+				args.params.select2_options.width = '100%';
+			}
 			args.params.select2_options = _.extend(
 				{
 					multiple: false,
 					cache: false,
-					width: '100%'
+					width: '72%'
 				},
 				args.params.select2_options
 			);

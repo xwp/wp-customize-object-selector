@@ -163,7 +163,7 @@ class Plugin {
 			$wp_styles->add( $handle, $src, $deps, $this->version );
 		}
 
-		$handle = 'customize-object-selector';
+		$handle = 'customize-object-selector-control';
 		$src = plugins_url( 'css/customize-object-selector' . $suffix, __DIR__ );
 		$deps = array( 'customize-controls', 'select2' );
 		$wp_styles->add( $handle, $src, $deps, $this->version );
@@ -661,15 +661,20 @@ class Plugin {
 				<# } #>
 				>
 			</select>
-
+			<button type="button" class="hidden button button-secondary single-selection select2-selection__choice__edit">
+				<span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span>
+			</button>
 			<# if ( ! _.isEmpty( data.addable_post_types ) ) { #>
-				<span class="add-new-post">
 					<# _.each( data.addable_post_types, function( addable_post_type ) { #>
-						<button type="button" class="button secondary-button add-new-post-button" data-post-type="{{ addable_post_type.post_type }}">
-							{{ addable_post_type.add_button_label }}
+						<#
+						var button_text = addable_post_type.add_button_label + ' ' + addable_post_type.post_type;
+						#>
+						<button class="button-secondary add-new-post-stub add-new-post-button" data-post-type="{{ addable_post_type.post_type }}" title="{{ button_text }}">
+							<span class="screen-reader-text">
+								{{ button_text }}
+							</span>
 						</button>
 					<# } ) #>
-				</span>
 			<# } #>
 		</script>
 
@@ -678,7 +683,14 @@ class Plugin {
 				<span class="select2-thumbnail-wrapper">
 					<img src="{{ data.featured_image.sizes.thumbnail.url }}">
 					{{{ data.text }}}
+					<# if ( data.element && data.multiple ) { #>
+						<span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}">
+							<span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span>
+						</span>
+					<# } #>
 				</span>
+			<# } else if ( data.element && data.multiple ) { #>
+				{{{ data.text }}} <span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span></span>
 			<# } else { #>
 				<# if ( data.depth ) { #>
 					<#

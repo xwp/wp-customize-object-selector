@@ -111,6 +111,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 						return $.trim( component.select2_result_template( data ) );
 					},
 					templateSelection: function( data ) {
+						data.multiple = component.select2_options.multiple;
 						return $.trim( component.select2_selection_template( data ) );
 					},
 					escapeMarkup: function( m ) {
@@ -148,6 +149,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 			if ( api.Posts && _.isFunction( api.Posts.startCreatePostFlow ) ) {
 				component.setupAddNewButtons();
+				component.setupEditLinks();
 			}
 
 			component.repopulateSelectOptionsForSettingChange = _.bind( component.repopulateSelectOptionsForSettingChange, component );
@@ -379,6 +381,53 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 							}
 							component.setSettingValues( values );
 						}
+					}
+				} );
+			} );
+		},
+
+		/**
+		 * Setup links for editing objects in select2.
+		 *
+		 * @returns {void}
+		 */
+		setupEditLinks: function setupEditLinks() {
+			var component = this, editButton, onSelect;
+
+			editButton = component.container.find( '.select2-selection__choice__edit' );
+			onSelect = function( pageId ) {
+				pageId = parseInt( pageId, 10 );
+				editButton.toggle( ! isNaN( pageId ) && 0 !== pageId && ! component.select2_options.multiple );
+			};
+			onSelect( component.model.get() );
+			component.model.bind( onSelect );
+
+			// Set up the add new post buttons
+			component.container.on( 'click', '.select2-selection__choice__edit', function( e ) {
+				var $elm = $( this ), postId;
+
+				if ( component.select2_options.multiple ) {
+					postId = $elm.data( 'postId' );
+				} else {
+					postId = parseInt( component.model.get(), 10 );
+				}
+
+				e.preventDefault();
+				component.select.select2( 'close' );
+				component.select.prop( 'disabled', true );
+				$elm.addClass( 'loading' );
+
+				api.Posts.startEditPostFlow( {
+					postId: postId,
+					initiatingButton: $elm,
+					originatingConstruct: component.containing_construct,
+					restorePreviousUrl: true,
+					returnToOriginatingConstruct: true,
+					breadcrumbReturnCallback: function() {
+						component.setSettingValues( component.getSettingValues().slice( 0 ) );
+						$elm.removeClass( 'loading' );
+						component.select.prop( 'disabled', false );
+						component.containing_construct.focus();
 					}
 				} );
 			} );

@@ -1,12 +1,56 @@
 .select2-container {
 	z-index: 1000000;
+	margin-bottom: 5px;
 }
+
 .select2-thumbnail-wrapper img {
 	height: 32px;
 	width: auto;
 	vertical-align: middle;
 }
 
+.customize-object-selector-container .single-selection.select2-selection__choice__edit,
+.customize-object-selector-container .add-new-post-stub {
+	padding: 0 5px 1px;
+}
+
+.customize-object-selector-container .single-selection.select2-selection__choice__edit {
+	top: -1px;
+	position: relative;
+}
+
+.customize-object-selector-container .single-selection.select2-selection__choice__edit:before {
+	content: "\f464";
+	font: normal 20px/1 dashicons;
+	position: relative;
+	top: -2px;
+	vertical-align: middle;
+}
+
+.customize-object-selector-container .add-new-post-stub:before {
+	content: "\f132";
+	display: inline-block;
+	position: relative;
+	font: normal 20px/1 dashicons;
+	vertical-align: middle;
+}
+
+.select2-selection__choice__edit {
+	cursor: pointer;
+}
+
+.select2-selection--single .select2-selection__choice__edit {
+	line-height: 26px;
+}
+
+.select2-selection__choice__edit.loading:before {
+	background: url(../images/spinner.gif) no-repeat;
+	-webkit-background-size: 20px 20px;
+	background-size: 20px 20px;
+	color: rgba( 255, 255, 255, 0 );
+	opacity: 0.7;
+	filter: alpha(opacity=70);
+}
 /* @todo A spinner would be better here */
 .customize-object-selector-populating {
 	opacity: 0.5;
