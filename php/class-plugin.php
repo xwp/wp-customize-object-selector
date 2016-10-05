@@ -277,7 +277,6 @@ class Plugin {
 			'show_initial_dropdown',
 			'dropdown_args',
 			'apply_dropdown_args_filters_post_id',
-			'reference_post_id',
 			'post_status',
 			'post_type',
 			's',
@@ -291,6 +290,8 @@ class Plugin {
 			'orderby',
 			'order',
 		);
+
+		$allowed_query_vars = apply_filters( 'customize_object_selector_query_posts_allowed_vars', $allowed_query_vars );
 
 		// White list allowed query vars.
 		$allowed_meta_query_vars = array(
@@ -411,10 +412,6 @@ class Plugin {
 		}
 
 		$post_query_vars['show_initial_dropdown'] = ! empty( $post_query_vars['show_initial_dropdown'] );
-
-		if ( isset( $post_query_vars['reference_post_id'] ) ) {
-			$post_query_vars['reference_post_id'] = absint( $post_query_vars['reference_post_id'] );
-		}
 
 		if ( ! is_array( $post_query_vars['dropdown_args'] ) ) {
 			return new \WP_Error(
