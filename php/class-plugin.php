@@ -412,6 +412,10 @@ class Plugin {
 
 		$post_query_vars['show_initial_dropdown'] = ! empty( $post_query_vars['show_initial_dropdown'] );
 
+		if ( isset( $post_query_vars['reference_post_id'] ) ) {
+			$post_query_vars['reference_post_id'] = absint( $post_query_vars['reference_post_id'] );
+		}
+
 		if ( ! is_array( $post_query_vars['dropdown_args'] ) ) {
 			return new \WP_Error(
 				'bad_dropdown_args',
