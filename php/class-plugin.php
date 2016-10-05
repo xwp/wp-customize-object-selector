@@ -277,6 +277,7 @@ class Plugin {
 			'show_initial_dropdown',
 			'dropdown_args',
 			'apply_dropdown_args_filters_post_id',
+			'reference_post_id',
 			'post_status',
 			'post_type',
 			's',
