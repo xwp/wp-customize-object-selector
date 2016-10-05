@@ -303,7 +303,11 @@ class Plugin {
 		// White list allowed meta query compare values.
 		$allowed_meta_query_compare_values = array( '=', '!=', '>', '>=', '<', '<=' );
 
-		$extra_query_vars = array_diff( array_keys( $post_query_vars ), $allowed_query_vars );
+		$original_post_query_vars = $post_query_vars;
+		$post_query_vars = wp_array_slice_assoc( $original_post_query_vars, $allowed_query_vars );
+		$post_query_vars = apply_filters( 'customize_object_selector_post_query_vars', $post_query_vars, $original_post_query_vars );
+
+		$extra_query_vars = array_diff( array_keys( $original_post_query_vars ), array_keys( $post_query_vars ) );
 		if ( ! empty( $extra_query_vars ) ) {
 			return new \WP_Error(
 				'disallowed_query_var',
