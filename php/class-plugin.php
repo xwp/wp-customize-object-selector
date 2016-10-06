@@ -291,8 +291,6 @@ class Plugin {
 			'order',
 		);
 
-		$allowed_query_vars = apply_filters( 'customize_object_selector_query_posts_allowed_vars', $allowed_query_vars );
-
 		// White list allowed query vars.
 		$allowed_meta_query_vars = array(
 			'key',
