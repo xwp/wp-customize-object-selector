@@ -305,7 +305,7 @@ class Plugin {
 		$post_query_vars = wp_array_slice_assoc( $original_post_query_vars, $allowed_query_vars );
 
 		/**
-		 * Filters the post query vars, enabling allowing and sanitizing custom post query.
+		 * Filters the post query vars, enabling allowing and sanitizing custom post query vars.
 		 *
 		 * @param array $post_query_vars			Post query vars that are in $allowed_query_vars.
 		 * @param array $original_post_query_vars	All the post query vars.
