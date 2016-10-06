@@ -303,6 +303,13 @@ class Plugin {
 
 		$original_post_query_vars = $post_query_vars;
 		$post_query_vars = wp_array_slice_assoc( $original_post_query_vars, $allowed_query_vars );
+
+		/**
+		 * Filters the post query vars, enabling allowing and sanitizing custom post query.
+		 *
+		 * @param array $post_query_vars			Post query vars that are in $allowed_query_vars.
+		 * @param array $original_post_query_vars	All the post query vars.
+		 */
 		$post_query_vars = apply_filters( 'customize_object_selector_post_query_vars', $post_query_vars, $original_post_query_vars );
 
 		$extra_query_vars = array_diff( array_keys( $original_post_query_vars ), array_keys( $post_query_vars ) );
