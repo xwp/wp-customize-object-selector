@@ -55,3 +55,8 @@
 .customize-object-selector-populating {
 	opacity: 0.5;
 }
+
+#customize-controls .customize-info.is-in-view,
+#customize-controls .customize-section-title.is-in-view {
+    z-index: 1000001; /* Because .select2-container has a z-index 1000000 */
+}
