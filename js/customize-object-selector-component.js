@@ -311,15 +311,21 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 * @returns {Number[]} IDs.
 		 */
 		getSettingValues: function() {
-			var component = this, settingValues, value;
+			var component = this, settingValues, parsedIds;
 			settingValues = component.model.get();
 			if ( ! _.isArray( settingValues ) ) {
-				value = parseInt( settingValues, 10 );
-				if ( isNaN( value ) || value <= 0 ) {
-					settingValues = [];
-				} else {
-					settingValues = [ value ];
+				parsedIds = [];
+				if ( _.isNumber( settingValues ) ) {
+					parsedIds.push( settingValues );
+				} else if ( _.isString( settingValues ) ) {
+					_.each( settingValues.split( /\s*,\s*/ ), function( value ) {
+						var parsedValue = parseInt( value, 10 );
+						if ( ! isNaN( parsedValue ) && parsedValue > 0 ) {
+							parsedIds.push( parsedValue );
+						}
+					} );
 				}
+				settingValues = parsedIds;
 			}
 			return settingValues;
 		},
