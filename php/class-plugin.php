@@ -48,6 +48,9 @@ class Plugin {
 
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customize_controls_enqueue_scripts' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
+		add_action( 'admin_print_footer_scripts', array( $this, 'print_templates' ) );
+		add_action( 'wp_print_footer_scripts', array( $this, 'print_templates' ) );
+
 		add_action( 'wp_ajax_' . static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, array( $this, 'handle_ajax_object_selector_query' ) );
 		add_filter( 'customize_refresh_nonces', array( $this, 'add_customize_object_selector_nonce' ) );
 	}
@@ -662,7 +665,7 @@ class Plugin {
 	 * Print templates.
 	 */
 	public function print_templates() {
-		if ( $this->templates_printed ) {
+		if ( $this->templates_printed || ! wp_script_is( 'customize-object-selector-component' ) ) {
 			return;
 		}
 		$this->templates_printed = true;
