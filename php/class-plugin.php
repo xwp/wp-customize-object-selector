@@ -165,9 +165,9 @@ class Plugin {
 			$wp_styles->add( $handle, $src, $deps, $this->version );
 		}
 
-		$handle = 'customize-object-selector-control';
+		$handle = 'customize-object-selector';
 		$src = plugins_url( 'css/customize-object-selector' . $suffix, __DIR__ );
-		$deps = array( 'customize-controls', 'select2' );
+		$deps = array( 'select2' );
 		$wp_styles->add( $handle, $src, $deps, $this->version );
 	}
 
@@ -180,7 +180,7 @@ class Plugin {
 		global $wp_customize;
 
 		wp_enqueue_script( 'customize-object-selector-control' );
-		wp_enqueue_style( 'customize-object-selector-control' );
+		wp_enqueue_style( 'customize-object-selector' );
 
 		if ( $wp_customize->get_section( 'static_front_page' ) ) {
 			wp_enqueue_script( 'customize-object-selector-static-front-page' );
