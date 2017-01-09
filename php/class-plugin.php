@@ -128,9 +128,11 @@ class Plugin {
 			'failed_to_fetch_selections' => __( 'Failed to fetch selections: %s', 'customize-object-selector' ),
 			'add_new_buttons_customize_posts_dependency' => __( '[Customize Object Selector] The show_add_buttons option depends on the Customize Posts plugin v0.8.0.', 'customize-object-selector' ),
 		);
+		$nonce = wp_create_nonce( static::OBJECT_SELECTOR_QUERY_AJAX_ACTION );
 		$wp_scripts->add_inline_script(
 			$handle,
-			sprintf( 'wp.customize.ObjectSelectorComponent.prototype.l10n = %s;', wp_json_encode( $l10n ) ),
+			sprintf( 'wp.customize.ObjectSelectorComponent.prototype.l10n = %s;', wp_json_encode( $l10n ) ) .
+			sprintf( 'wp.customize.ObjectSelectorComponent.prototype.nonce = %s;', wp_json_encode( $nonce ) ),
 			'after'
 		);
 

@@ -8,7 +8,23 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 	return api.Class.extend({
 
-		// Note the translations are exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
+		/**
+		 * Initial nonce for requests.
+		 *
+		 * Note This is is exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
+		 * This property will be used in lieu of `wp.customize.settings.nonce` being available.
+		 *
+		 * @var string
+		 */
+		nonce: '',
+
+		/**
+		 * Note the translations are exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
+		 *
+		 * Note This is is exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
+		 *
+		 * @var object
+		 */
 		l10n: {
 			missing_model_arg: '',
 			failed_to_fetch_selections: '',
@@ -245,8 +261,20 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		queryPosts: function queryPosts( extraQueryVars ) {
 			var component = this, action, data, postQueryArgs = {};
 			action = 'customize_object_selector_query';
-			data = api.previewer.query();
-			data.customize_object_selector_query_nonce = api.settings.nonce[ action ];
+			data = {
+				customize_object_selector_query_nonce: component.nonce
+			};
+
+			// Include customized state if in customizer.
+			if ( api.previewer && api.previewer.query ) {
+				_.extend( data, api.previewer.query() );
+			}
+
+			// Use refreshed nonce from in customizer if available.
+			if ( api.settings && api.settings.nonce && api.settings.nonce[ action ] ) {
+				data.customize_object_selector_query_nonce = api.settings.nonce[ action ];
+			}
+
 			_.extend(
 				postQueryArgs,
 				component.post_query_vars || {},
