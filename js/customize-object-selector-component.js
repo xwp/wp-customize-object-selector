@@ -67,8 +67,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			component.post_query_vars = null;
 			component.show_add_buttons = _.isUndefined( args.show_add_buttons ) ? true : args.show_add_buttons;
 			if ( component.show_add_buttons && ( ! api.Posts || ! _.isFunction( api.Posts.startCreatePostFlow ) ) ) {
-				if ( 'undefined' !== typeof console && _.isFunction( console.warn ) ) {
-					console.warn( component.l10n.add_new_buttons_customize_posts_dependency );
+				if ( 'undefined' !== typeof console && _.isFunction( console.warn ) && api.Section ) {
+					console.info( component.l10n.add_new_buttons_customize_posts_dependency );
 				}
 				component.show_add_buttons = false;
 			}
