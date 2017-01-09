@@ -48,6 +48,9 @@ class Plugin {
 
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customize_controls_enqueue_scripts' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
+		add_action( 'admin_print_footer_scripts', array( $this, 'print_templates' ) );
+		add_action( 'wp_print_footer_scripts', array( $this, 'print_templates' ) );
+
 		add_action( 'wp_ajax_' . static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, array( $this, 'handle_ajax_object_selector_query' ) );
 		add_filter( 'customize_refresh_nonces', array( $this, 'add_customize_object_selector_nonce' ) );
 	}
@@ -128,9 +131,11 @@ class Plugin {
 			'failed_to_fetch_selections' => __( 'Failed to fetch selections: %s', 'customize-object-selector' ),
 			'add_new_buttons_customize_posts_dependency' => __( '[Customize Object Selector] The show_add_buttons option depends on the Customize Posts plugin v0.8.0.', 'customize-object-selector' ),
 		);
+		$nonce = wp_create_nonce( static::OBJECT_SELECTOR_QUERY_AJAX_ACTION );
 		$wp_scripts->add_inline_script(
 			$handle,
-			sprintf( 'wp.customize.ObjectSelectorComponent.prototype.l10n = %s;', wp_json_encode( $l10n ) ),
+			sprintf( 'wp.customize.ObjectSelectorComponent.prototype.l10n = %s;', wp_json_encode( $l10n ) ) .
+			sprintf( 'wp.customize.ObjectSelectorComponent.prototype.nonce = %s;', wp_json_encode( $nonce ) ),
 			'after'
 		);
 
@@ -163,9 +168,9 @@ class Plugin {
 			$wp_styles->add( $handle, $src, $deps, $this->version );
 		}
 
-		$handle = 'customize-object-selector-control';
+		$handle = 'customize-object-selector';
 		$src = plugins_url( 'css/customize-object-selector' . $suffix, __DIR__ );
-		$deps = array( 'customize-controls', 'select2' );
+		$deps = array( 'select2' );
 		$wp_styles->add( $handle, $src, $deps, $this->version );
 	}
 
@@ -178,7 +183,7 @@ class Plugin {
 		global $wp_customize;
 
 		wp_enqueue_script( 'customize-object-selector-control' );
-		wp_enqueue_style( 'customize-object-selector-control' );
+		wp_enqueue_style( 'customize-object-selector' );
 
 		if ( $wp_customize->get_section( 'static_front_page' ) ) {
 			wp_enqueue_script( 'customize-object-selector-static-front-page' );
@@ -661,9 +666,21 @@ class Plugin {
 	}
 
 	/**
+	 * Whether templates have been printed.
+	 *
+	 * @var bool
+	 */
+	protected $templates_printed = false;
+
+	/**
 	 * Print templates.
 	 */
 	public function print_templates() {
+		if ( $this->templates_printed || ! wp_script_is( 'customize-object-selector-component' ) ) {
+			return;
+		}
+		$this->templates_printed = true;
+
 		?>
 		<script id="tmpl-customize-object-selector-component" type="text/html">
 			<select id="{{ data.select_id }}"

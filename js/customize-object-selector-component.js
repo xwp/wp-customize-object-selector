@@ -8,7 +8,23 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 
 	return api.Class.extend({
 
-		// Note the translations are exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
+		/**
+		 * Initial nonce for requests.
+		 *
+		 * Note This is is exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
+		 * This property will be used in lieu of `wp.customize.settings.nonce` being available.
+		 *
+		 * @var string
+		 */
+		nonce: '',
+
+		/**
+		 * Note the translations are exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
+		 *
+		 * Note This is is exported from PHP via \CustomizeObjectSelector\Plugin::register_scripts().
+		 *
+		 * @var object
+		 */
 		l10n: {
 			missing_model_arg: '',
 			failed_to_fetch_selections: '',
@@ -51,8 +67,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			component.post_query_vars = null;
 			component.show_add_buttons = _.isUndefined( args.show_add_buttons ) ? true : args.show_add_buttons;
 			if ( component.show_add_buttons && ( ! api.Posts || ! _.isFunction( api.Posts.startCreatePostFlow ) ) ) {
-				if ( 'undefined' !== typeof console && _.isFunction( console.warn ) ) {
-					console.warn( component.l10n.add_new_buttons_customize_posts_dependency );
+				if ( 'undefined' !== typeof console && _.isFunction( console.warn ) && api.Section ) {
+					console.info( component.l10n.add_new_buttons_customize_posts_dependency );
 				}
 				component.show_add_buttons = false;
 			}
@@ -245,8 +261,20 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		queryPosts: function queryPosts( extraQueryVars ) {
 			var component = this, action, data, postQueryArgs = {};
 			action = 'customize_object_selector_query';
-			data = api.previewer.query();
-			data.customize_object_selector_query_nonce = api.settings.nonce[ action ];
+			data = {
+				customize_object_selector_query_nonce: component.nonce
+			};
+
+			// Include customized state if in customizer.
+			if ( api.previewer && api.previewer.query ) {
+				_.extend( data, api.previewer.query() );
+			}
+
+			// Use refreshed nonce from in customizer if available.
+			if ( api.settings && api.settings.nonce && api.settings.nonce[ action ] ) {
+				data.customize_object_selector_query_nonce = api.settings.nonce[ action ];
+			}
+
 			_.extend(
 				postQueryArgs,
 				component.post_query_vars || {},
@@ -283,15 +311,21 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 * @returns {Number[]} IDs.
 		 */
 		getSettingValues: function() {
-			var component = this, settingValues, value;
+			var component = this, settingValues, parsedIds;
 			settingValues = component.model.get();
 			if ( ! _.isArray( settingValues ) ) {
-				value = parseInt( settingValues, 10 );
-				if ( isNaN( value ) || value <= 0 ) {
-					settingValues = [];
-				} else {
-					settingValues = [ value ];
+				parsedIds = [];
+				if ( _.isNumber( settingValues ) ) {
+					parsedIds.push( settingValues );
+				} else if ( _.isString( settingValues ) ) {
+					_.each( settingValues.split( /\s*,\s*/ ), function( value ) {
+						var parsedValue = parseInt( value, 10 );
+						if ( ! isNaN( parsedValue ) && parsedValue > 0 ) {
+							parsedIds.push( parsedValue );
+						}
+					} );
 				}
+				settingValues = parsedIds;
 			}
 			return settingValues;
 		},
@@ -462,7 +496,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 					orderby: 'post__in'
 				});
 				component.currentRequest.done( function( data ) {
-					if ( component.containing_construct.notifications ) {
+					if ( component.containing_construct && component.containing_construct.notifications ) {
 						component.containing_construct.notifications.remove( 'select2_init_failure' );
 					}
 					component.select.empty();
@@ -478,7 +512,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				} );
 				component.currentRequest.fail( function( jqXHR, status, statusText ) {
 					var notification;
-					if ( 'abort' !== status && api.Notification && component.containing_construct.notifications ) {
+					if ( 'abort' !== status && api.Notification && component.containing_construct && component.containing_construct.notifications ) {
 
 						// @todo Allow clicking on this notification to re-call populateSelectOptions()
 						// @todo The error should be triggered on the component itself so that the control adds it to its notifications. Too much coupling here.
