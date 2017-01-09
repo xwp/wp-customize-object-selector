@@ -30,7 +30,7 @@ class Control extends \WP_Customize_Control {
 	public $select2_options = array(
 		'multiple' => false,
 		'cache' => false,
-		'width' => '100%',
+		'width' => '80%',
 	);
 
 	/**

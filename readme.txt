@@ -1,9 +1,9 @@
 === Customize Object Selector ===
 Contributors:      xwp, westonruter
 Tags:              customizer, customize, select2, posts, pages, dropdown
-Requires at least: 4.5
-Tested up to:      4.7-alpha
-Stable tag:        0.3.0
+Requires at least: 4.5.0
+Tested up to:      4.7.1
+Stable tag:        0.4.0
 License:           GPLv2 or later
 License URI:       http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,6 +26,17 @@ For an example integration with the Customize Posts plugin, see pending usage as
 **Development of this plugin is done [on GitHub](https://github.com/xwp/wp-customize-object-selector). Pull requests welcome. Please see [issues](https://github.com/xwp/wp-customize-object-selector/issues) reported there before going to the [plugin forum](https://wordpress.org/support/plugin/customize-object-selector).**
 
 == Changelog ==
+
+= 0.4.0 - 2017-01-08 =
+
+* Add an edit shortcut in selected posts to open corresponding post section from Customize Posts; re-use `wp.customize.Posts.startEditPostFlow()`. See [#8](https://github.com/xwp/wp-customize-object-selector/issues/8), PR [#12](https://github.com/xwp/wp-customize-object-selector/issues/12).
+* Add ability to whitelist additional query vars via `customize_object_selector_post_query_vars` filter. See PR [#25](https://github.com/xwp/wp-customize-object-selector/pull/25).
+* Fix Select2 elements erroneously appearing on top of a section's header. See PR [#26](https://github.com/xwp/wp-customize-object-selector/pull/26).
+* Add ability to use Customize Object Selector component outside of the customizer entirely. Immediate use case is for [JS Widgets](https://github.com/xwp/wp-js-widgets) and its [Post Collection](https://github.com/xwp/wp-js-widgets/tree/develop/post-collection-widget) widget. See PR [#27](https://github.com/xwp/wp-customize-object-selector/pull/27).
+
+See <a href="https://github.com/xwp/wp-customize-object-selector/milestone/1?closed=1">issues and PRs in milestone</a> and <a href="https://github.com/xwp/wp-customize-object-selector/compare/0.3.0...0.4.0">full release commit log</a>.
+
+Props Miina Sikk (<a href="https://github.com/miina" class="user-mention">@miina</a>), Weston Ruter (<a href="https://github.com/westonruter" class="user-mention">@westonruter</a>), Derek Herman (<a href="https://github.com/valendesigns" class="user-mention">@valendesigns</a>), Sayed Taqui (<a href="https://github.com/sayedwp" class="user-mention">@sayedwp</a>.
 
 = 0.3.0 - 2016-09-21 =
 

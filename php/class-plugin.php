@@ -48,6 +48,9 @@ class Plugin {
 
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'customize_controls_enqueue_scripts' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
+		add_action( 'admin_print_footer_scripts', array( $this, 'print_templates' ) );
+		add_action( 'wp_print_footer_scripts', array( $this, 'print_templates' ) );
+
 		add_action( 'wp_ajax_' . static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, array( $this, 'handle_ajax_object_selector_query' ) );
 		add_filter( 'customize_refresh_nonces', array( $this, 'add_customize_object_selector_nonce' ) );
 	}
@@ -128,9 +131,11 @@ class Plugin {
 			'failed_to_fetch_selections' => __( 'Failed to fetch selections: %s', 'customize-object-selector' ),
 			'add_new_buttons_customize_posts_dependency' => __( '[Customize Object Selector] The show_add_buttons option depends on the Customize Posts plugin v0.8.0.', 'customize-object-selector' ),
 		);
+		$nonce = wp_create_nonce( static::OBJECT_SELECTOR_QUERY_AJAX_ACTION );
 		$wp_scripts->add_inline_script(
 			$handle,
-			sprintf( 'wp.customize.ObjectSelectorComponent.prototype.l10n = %s;', wp_json_encode( $l10n ) ),
+			sprintf( 'wp.customize.ObjectSelectorComponent.prototype.l10n = %s;', wp_json_encode( $l10n ) ) .
+			sprintf( 'wp.customize.ObjectSelectorComponent.prototype.nonce = %s;', wp_json_encode( $nonce ) ),
 			'after'
 		);
 
@@ -165,7 +170,7 @@ class Plugin {
 
 		$handle = 'customize-object-selector';
 		$src = plugins_url( 'css/customize-object-selector' . $suffix, __DIR__ );
-		$deps = array( 'customize-controls', 'select2' );
+		$deps = array( 'select2' );
 		$wp_styles->add( $handle, $src, $deps, $this->version );
 	}
 
@@ -178,7 +183,7 @@ class Plugin {
 		global $wp_customize;
 
 		wp_enqueue_script( 'customize-object-selector-control' );
-		wp_enqueue_style( 'customize-object-selector-control' );
+		wp_enqueue_style( 'customize-object-selector' );
 
 		if ( $wp_customize->get_section( 'static_front_page' ) ) {
 			wp_enqueue_script( 'customize-object-selector-static-front-page' );
@@ -301,7 +306,18 @@ class Plugin {
 		// White list allowed meta query compare values.
 		$allowed_meta_query_compare_values = array( '=', '!=', '>', '>=', '<', '<=' );
 
-		$extra_query_vars = array_diff( array_keys( $post_query_vars ), $allowed_query_vars );
+		$original_post_query_vars = $post_query_vars;
+		$post_query_vars = wp_array_slice_assoc( $original_post_query_vars, $allowed_query_vars );
+
+		/**
+		 * Filters the post query vars, enabling allowing and sanitizing custom post query vars.
+		 *
+		 * @param array $post_query_vars			Post query vars that are in $allowed_query_vars.
+		 * @param array $original_post_query_vars	All the post query vars.
+		 */
+		$post_query_vars = apply_filters( 'customize_object_selector_post_query_vars', $post_query_vars, $original_post_query_vars );
+
+		$extra_query_vars = array_diff( array_keys( $original_post_query_vars ), array_keys( $post_query_vars ) );
 		if ( ! empty( $extra_query_vars ) ) {
 			return new \WP_Error(
 				'disallowed_query_var',
@@ -650,9 +666,21 @@ class Plugin {
 	}
 
 	/**
+	 * Whether templates have been printed.
+	 *
+	 * @var bool
+	 */
+	protected $templates_printed = false;
+
+	/**
 	 * Print templates.
 	 */
 	public function print_templates() {
+		if ( $this->templates_printed || ! wp_script_is( 'customize-object-selector-component' ) ) {
+			return;
+		}
+		$this->templates_printed = true;
+
 		?>
 		<script id="tmpl-customize-object-selector-component" type="text/html">
 			<select id="{{ data.select_id }}"
@@ -661,15 +689,20 @@ class Plugin {
 				<# } #>
 				>
 			</select>
-
+			<button type="button" class="hidden button button-secondary single-selection select2-selection__choice__edit">
+				<span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span>
+			</button>
 			<# if ( ! _.isEmpty( data.addable_post_types ) ) { #>
-				<span class="add-new-post">
 					<# _.each( data.addable_post_types, function( addable_post_type ) { #>
-						<button type="button" class="button secondary-button add-new-post-button" data-post-type="{{ addable_post_type.post_type }}">
-							{{ addable_post_type.add_button_label }}
+						<#
+						var button_text = addable_post_type.add_button_label + ' ' + addable_post_type.post_type;
+						#>
+						<button class="button-secondary add-new-post-stub add-new-post-button" data-post-type="{{ addable_post_type.post_type }}" title="{{ button_text }}">
+							<span class="screen-reader-text">
+								{{ button_text }}
+							</span>
 						</button>
 					<# } ) #>
-				</span>
 			<# } #>
 		</script>
 
@@ -678,7 +711,14 @@ class Plugin {
 				<span class="select2-thumbnail-wrapper">
 					<img src="{{ data.featured_image.sizes.thumbnail.url }}">
 					{{{ data.text }}}
+					<# if ( data.element && data.multiple ) { #>
+						<span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}">
+							<span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span>
+						</span>
+					<# } #>
 				</span>
+			<# } else if ( data.element && data.multiple ) { #>
+				{{{ data.text }}} <span class="dashicons dashicons-edit select2-selection__choice__edit" role="presentation" data-post-id="{{ data.id }}"><span class="screen-reader-text"><?php esc_html_e( 'Edit', 'customize-object-selector' ); ?></span></span>
 			<# } else { #>
 				<# if ( data.depth ) { #>
 					<#
