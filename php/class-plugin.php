@@ -652,9 +652,21 @@ class Plugin {
 	}
 
 	/**
+	 * Whether templates have been printed.
+	 *
+	 * @var bool
+	 */
+	protected $templates_printed = false;
+
+	/**
 	 * Print templates.
 	 */
 	public function print_templates() {
+		if ( $this->templates_printed ) {
+			return;
+		}
+		$this->templates_printed = true;
+
 		?>
 		<script id="tmpl-customize-object-selector-component" type="text/html">
 			<select id="{{ data.select_id }}"
