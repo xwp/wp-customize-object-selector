@@ -496,7 +496,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 					orderby: 'post__in'
 				});
 				component.currentRequest.done( function( data ) {
-					if ( component.containing_construct.notifications ) {
+					if ( component.containing_construct && component.containing_construct.notifications ) {
 						component.containing_construct.notifications.remove( 'select2_init_failure' );
 					}
 					component.select.empty();
@@ -512,7 +512,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 				} );
 				component.currentRequest.fail( function( jqXHR, status, statusText ) {
 					var notification;
-					if ( 'abort' !== status && api.Notification && component.containing_construct.notifications ) {
+					if ( 'abort' !== status && api.Notification && component.containing_construct && component.containing_construct.notifications ) {
 
 						// @todo Allow clicking on this notification to re-call populateSelectOptions()
 						// @todo The error should be triggered on the component itself so that the control adds it to its notifications. Too much coupling here.
