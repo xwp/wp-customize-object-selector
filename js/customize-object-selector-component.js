@@ -480,7 +480,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			selectedValues = component.getSelectedValues();
 			if ( ! refresh && _.isEqual( selectedValues, settingValues ) ) {
 				deferred.resolve();
-			} else if ( 0 === settingValues.length ) {
+			} else if ( 0 === settingValues.length || _.isEqual( [0], settingValues ) ) {
 				component.select.empty();
 				component.select.trigger( 'change' );
 				deferred.resolve();
