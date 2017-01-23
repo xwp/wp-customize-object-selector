@@ -641,7 +641,7 @@ class Plugin {
 						$result['featured_image'] = null;
 					}
 				}
-				return $result;
+				return apply_filters( 'customize_object_selector_result', $result, $post, $post_query_args );
 			},
 			$query->posts
 		);
