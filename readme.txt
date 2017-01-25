@@ -27,6 +27,10 @@ For an example integration with the Customize Posts plugin, see pending usage as
 
 == Changelog ==
 
+= 0.4.1 - ? =
+
+* Increase importance of `z-index` in CSS rule for Select2 dropdown for compatibility with conflicting rule in Shortcake.
+
 = 0.4.0 - 2017-01-08 =
 
 * Add an edit shortcut in selected posts to open corresponding post section from Customize Posts; re-use `wp.customize.Posts.startEditPostFlow()`. See [#8](https://github.com/xwp/wp-customize-object-selector/issues/8), PR [#12](https://github.com/xwp/wp-customize-object-selector/issues/12).
