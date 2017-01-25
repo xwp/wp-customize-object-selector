@@ -304,7 +304,7 @@ class Plugin {
 		);
 
 		// White list allowed meta query compare values.
-		$allowed_meta_query_compare_values = array( '=', '!=', '>', '>=', '<', '<=' );
+		$allowed_meta_query_compare_values = array( '=', '!=', '>', '>=', '<', '<=', 'LIKE' );
 
 		$original_post_query_vars = $post_query_vars;
 		$post_query_vars = wp_array_slice_assoc( $original_post_query_vars, $allowed_query_vars );
