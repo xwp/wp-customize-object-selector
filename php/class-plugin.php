@@ -304,7 +304,7 @@ class Plugin {
 		);
 
 		// White list allowed meta query compare values.
-		$allowed_meta_query_compare_values = array( '=', '!=', '>', '>=', '<', '<=' );
+		$allowed_meta_query_compare_values = array( '=', '!=', '>', '>=', '<', '<=', 'LIKE' );
 
 		$original_post_query_vars = $post_query_vars;
 		$post_query_vars = wp_array_slice_assoc( $original_post_query_vars, $allowed_query_vars );
@@ -598,7 +598,7 @@ class Plugin {
 		$is_multiple_post_types = count( $query->get( 'post_type' ) ) > 1;
 
 		$results = array_map(
-			function( $post ) use ( $is_multiple_post_types, $post_query_args ) {
+			function( $post ) use ( $is_multiple_post_types, $post_query_args, $query ) {
 				$title = htmlspecialchars_decode( html_entity_decode( $post->post_title ), ENT_QUOTES );
 				$post_type_obj = get_post_type_object( $post->post_type );
 				$post_status_obj = get_post_status_object( $post->post_status );
@@ -641,6 +641,15 @@ class Plugin {
 						$result['featured_image'] = null;
 					}
 				}
+
+				/**
+				 * Filters a result from querying posts for the customize object selector component.
+				 *
+				 * @param array     $result Result returned to Select2.
+				 * @param \WP_Post  $post   Post.
+				 * @param \WP_Query $query  Query.
+				 */
+				$result = apply_filters( 'customize_object_selector_result', $result, $post, $query );
 				return $result;
 			},
 			$query->posts
