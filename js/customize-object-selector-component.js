@@ -47,7 +47,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 		 * @param {Boolean}  args.show_add_buttons - Whether add buttons will be shown if available.
 		 * @returns {void}
 		 */
-		initialize: function initialize( args ) {
+		initialize: function initialize( args ) { // eslint-disable-line complexity
 			var component = this;
 
 			if ( ! args.model || 'function' !== typeof args.model.get ) {
@@ -429,8 +429,8 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			var component = this, editButton, onSelect;
 
 			editButton = component.container.find( '.select2-selection__choice__edit' );
-			onSelect = function( pageId ) {
-				pageId = parseInt( pageId, 10 );
+			onSelect = function( id ) {
+				var pageId = parseInt( id, 10 );
 				editButton.toggle( ! isNaN( pageId ) && 0 !== pageId && ! component.select2_options.multiple );
 			};
 			onSelect( component.model.get() );
@@ -480,7 +480,7 @@ wp.customize.ObjectSelectorComponent = (function( api, $ ) {
 			selectedValues = component.getSelectedValues();
 			if ( ! refresh && _.isEqual( selectedValues, settingValues ) ) {
 				deferred.resolve();
-			} else if ( 0 === settingValues.length ) {
+			} else if ( 0 === settingValues.length || _.isEqual( [0], settingValues ) ) {
 				component.select.empty();
 				component.select.trigger( 'change' );
 				deferred.resolve();

@@ -7,8 +7,8 @@ Adds a Customizer control to select one or multiple posts (and eventually terms 
 **Contributors:** [xwp](https://profiles.wordpress.org/xwp), [westonruter](https://profiles.wordpress.org/westonruter)  
 **Tags:** [customizer](https://wordpress.org/plugins/tags/customizer), [customize](https://wordpress.org/plugins/tags/customize), [select2](https://wordpress.org/plugins/tags/select2), [posts](https://wordpress.org/plugins/tags/posts), [pages](https://wordpress.org/plugins/tags/pages), [dropdown](https://wordpress.org/plugins/tags/dropdown)  
 **Requires at least:** 4.5.0  
-**Tested up to:** 4.7.1  
-**Stable tag:** 0.4.0  
+**Tested up to:** 4.8.0-alpha  
+**Stable tag:** 0.4.1  
 **License:** [GPLv2 or later](http://www.gnu.org/licenses/gpl-2.0.html)  
 
 [![Build Status](https://travis-ci.org/xwp/wp-customize-object-selector.svg?branch=master)](https://travis-ci.org/xwp/wp-customize-object-selector) [![Built with Grunt](https://cdn.gruntjs.com/builtwith.svg)](http://gruntjs.com) 
@@ -31,8 +31,15 @@ For an example integration with the Customize Posts plugin, see pending usage as
 
 ## Changelog ##
 
-### 0.4.1 - ? ###
+### 0.4.1 - 2017-02-17 ###
 * Increase importance of `z-index` in CSS rule for Select2 dropdown for compatibility with conflicting rule in Shortcake.
+* Fix bug with clearing a selection. See [#31](https://github.com/xwp/wp-customize-object-selector/pull/31)
+* Allow `LIKE` to be used in meta queries for object selector searches. See [#32](https://github.com/xwp/wp-customize-object-selector/pull/32)
+* Introduce `customize_object_selector_result` filter.
+
+See <a href="https://github.com/xwp/wp-customize-object-selector/milestone/2?closed=11">issues and PRs in milestone</a> and <a href="https://github.com/xwp/wp-customize-object-selector/compare/0.4.0...0.4.1">full release commit log</a>.
+
+Props Weston Ruter (<a href="https://github.com/westonruter" class="user-mention">@westonruter</a>), Sayed Taqui (<a href="https://github.com/sayedwp" class="user-mention">@sayedwp</a>.
 
 ### 0.4.0 - 2017-01-08 ###
 * Add an edit shortcut in selected posts to open corresponding post section from Customize Posts; re-use `wp.customize.Posts.startEditPostFlow()`. See [#8](https://github.com/xwp/wp-customize-object-selector/issues/8), PR [#12](https://github.com/xwp/wp-customize-object-selector/issues/12).

@@ -2,8 +2,8 @@
 Contributors:      xwp, westonruter
 Tags:              customizer, customize, select2, posts, pages, dropdown
 Requires at least: 4.5.0
-Tested up to:      4.7.1
-Stable tag:        0.4.0
+Tested up to:      4.8.0-alpha
+Stable tag:        0.4.1
 License:           GPLv2 or later
 License URI:       http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -27,9 +27,16 @@ For an example integration with the Customize Posts plugin, see pending usage as
 
 == Changelog ==
 
-= 0.4.1 - ? =
+= 0.4.1 - 2017-02-17 =
 
 * Increase importance of `z-index` in CSS rule for Select2 dropdown for compatibility with conflicting rule in Shortcake.
+* Fix bug with clearing a selection. See [#31](https://github.com/xwp/wp-customize-object-selector/pull/31)
+* Allow `LIKE` to be used in meta queries for object selector searches. See [#32](https://github.com/xwp/wp-customize-object-selector/pull/32)
+* Introduce `customize_object_selector_result` filter.
+
+See <a href="https://github.com/xwp/wp-customize-object-selector/milestone/2?closed=11">issues and PRs in milestone</a> and <a href="https://github.com/xwp/wp-customize-object-selector/compare/0.4.0...0.4.1">full release commit log</a>.
+
+Props Weston Ruter (<a href="https://github.com/westonruter" class="user-mention">@westonruter</a>), Sayed Taqui (<a href="https://github.com/sayedwp" class="user-mention">@sayedwp</a>.
 
 = 0.4.0 - 2017-01-08 =
 
