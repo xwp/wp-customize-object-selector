@@ -199,23 +199,32 @@ class Plugin {
 		global $wp_customize;
 
 		// Close output buffering to ensure that _ajax_wp_die_handler doesn't clobber the status_header(). See <https://core.trac.wordpress.org/ticket/35666#comment:6>.
-		while ( 0 !== ob_get_level()  ) {
+		while ( 0 !== ob_get_level() ) {
 			ob_end_clean();
 		}
 
 		$nonce_query_var_name = 'customize_object_selector_query_nonce';
 		if ( ! check_ajax_referer( static::OBJECT_SELECTOR_QUERY_AJAX_ACTION, $nonce_query_var_name, false ) ) {
 			status_header( 400 );
-			wp_send_json_error( array( 'code' => 'bad_nonce' ), 400 ); // Note: The redundant 400 status is needed until #35666 is resolved.
+			wp_send_json_error(
+				array(
+					'code' => 'bad_nonce',
+				),
+				400 // Note: The redundant 400 status is needed until #35666 is resolved.
+			);
 		}
 		if ( ! isset( $_POST['post_query_args'] ) ) {
 			status_header( 400 );
-			wp_send_json_error( array( 'code' => 'missing_post_query_args' ), 400 );
+			wp_send_json_error( array(
+				'code' => 'missing_post_query_args',
+			), 400 );
 		}
 		$post_query_args = json_decode( wp_unslash( $_POST['post_query_args'] ), true );
 		if ( ! is_array( $post_query_args ) ) {
 			status_header( 400 );
-			wp_send_json_error( array( 'code' => 'invalid_post_query_args' ), 400 );
+			wp_send_json_error( array(
+				'code' => 'invalid_post_query_args',
+			), 400 );
 		}
 
 		$post_query_args = $this->process_post_query_vars( $post_query_args );
@@ -322,14 +331,18 @@ class Plugin {
 			return new \WP_Error(
 				'disallowed_query_var',
 				__( 'Disallowed query var', 'customize-object-selector' ),
-				array( 'query_vars' => array_values( $extra_query_vars ) )
+				array(
+					'query_vars' => array_values( $extra_query_vars ),
+				)
 			);
 		}
 		if ( ! empty( $post_query_vars['meta_compare'] ) && ! in_array( $post_query_vars['meta_compare'], $allowed_meta_query_compare_values, true ) ) {
 			return new \WP_Error(
 				'disallowed_meta_compare_query_var',
 				__( 'Disallowed meta_compare query var', 'customize-object-selector' ),
-				array( 'query_var' => $post_query_vars['meta_compare'] )
+				array(
+					'query_var' => $post_query_vars['meta_compare'],
+				)
 			);
 		}
 
@@ -341,7 +354,9 @@ class Plugin {
 						return new \WP_Error(
 							'disallowed_meta_query_relation_var',
 							__( 'Disallowed meta_query relation', 'customize-object-selector' ),
-							array( 'query_vars' => array_values( $val ) )
+							array(
+								'query_vars' => array_values( $val ),
+							)
 						);
 					}
 					continue;
@@ -351,14 +366,18 @@ class Plugin {
 					return new \WP_Error(
 						'disallowed_meta_query_var',
 						__( 'Disallowed meta_query var', 'customize-object-selector' ),
-						array( 'query_vars' => array_values( $extra_meta_query_vars ) )
+						array(
+							'query_vars' => array_values( $extra_meta_query_vars ),
+						)
 					);
 				}
 				if ( ! empty( $val['compare'] ) && ! in_array( $val['compare'], $allowed_meta_query_compare_values, true ) ) {
 					return new \WP_Error(
 						'disallowed_meta_compare_query_var',
 						__( 'Disallowed meta_compare query var', 'customize-object-selector' ),
-						array( 'query_vars' => $post_query_vars['meta_query']['compare'] )
+						array(
+							'query_vars' => $post_query_vars['meta_query']['compare'],
+						)
 					);
 				}
 			}
@@ -379,7 +398,9 @@ class Plugin {
 				return new \WP_Error(
 					'bad_post_status',
 					__( 'Bad post status', 'customize-object-selector' ),
-					array( 'post_status' => $post_status )
+					array(
+						'post_status' => $post_status,
+					)
 				);
 			}
 			if ( ! empty( $post_status_object->publicly_queryable ) ) {
@@ -401,21 +422,27 @@ class Plugin {
 				return new \WP_Error(
 					'bad_post_type',
 					__( 'Bad post type', 'customize-object-selector' ),
-					array( 'post_type' => $post_type )
+					array(
+						'post_type' => $post_type,
+					)
 				);
 			}
 			if ( ! current_user_can( $post_type_object->cap->read ) ) {
 				return new \WP_Error(
 					'cannot_query_posts',
 					__( 'Cannot query posts', 'customize-object-selector' ),
-					array( 'post_type' => $post_type )
+					array(
+						'post_type' => $post_type,
+					)
 				);
 			}
 			if ( $has_private_status && ! current_user_can( $post_type_object->cap->read_private_posts ) ) {
 				return new \WP_Error(
 					'cannot_query_private_posts',
 					__( 'Cannot query private posts', 'customize-object-selector' ),
-					array( 'post_type' => $post_type )
+					array(
+						'post_type' => $post_type,
+					)
 				);
 			}
 		}
@@ -530,8 +557,11 @@ class Plugin {
 			if ( in_array( $key, $unsupported_args, true ) ) {
 				return new \WP_Error(
 					'unsupported_dropdown_pages_arg',
+					/* translators: placeholder is dropdown_pages argument */
 					sprintf( __( 'Unsupported arg "%s" in dropdown_args or supplied by page_attributes_dropdown_pages_args filter', 'customize-object-selector' ), $key ),
-					array( 'arg' => $key )
+					array(
+						'arg' => $key,
+					)
 				);
 			}
 		}
