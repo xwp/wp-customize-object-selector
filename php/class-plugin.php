@@ -321,8 +321,8 @@ class Plugin {
 		/**
 		 * Filters the post query vars, enabling allowing and sanitizing custom post query vars.
 		 *
-		 * @param array $post_query_vars			Post query vars that are in $allowed_query_vars.
-		 * @param array $original_post_query_vars	All the post query vars.
+		 * @param array $post_query_vars          Post query vars that are in $allowed_query_vars.
+		 * @param array $original_post_query_vars All the post query vars.
 		 */
 		$post_query_vars = apply_filters( 'customize_object_selector_post_query_vars', $post_query_vars, $original_post_query_vars );
 
