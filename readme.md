@@ -6,8 +6,8 @@ Adds a Customizer control to select one or multiple posts (and eventually terms 
 
 **Contributors:** [xwp](https://profiles.wordpress.org/xwp), [westonruter](https://profiles.wordpress.org/westonruter)  
 **Tags:** [customizer](https://wordpress.org/plugins/tags/customizer), [customize](https://wordpress.org/plugins/tags/customize), [select2](https://wordpress.org/plugins/tags/select2), [posts](https://wordpress.org/plugins/tags/posts), [pages](https://wordpress.org/plugins/tags/pages), [dropdown](https://wordpress.org/plugins/tags/dropdown)  
-**Requires at least:** 4.5.0  
-**Tested up to:** 4.8.0-alpha  
+**Requires at least:** 4.7.0  
+**Tested up to:** 4.9.0  
 **Stable tag:** 0.4.1  
 **License:** [GPLv2 or later](http://www.gnu.org/licenses/gpl-2.0.html)  
 
