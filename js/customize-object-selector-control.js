@@ -25,7 +25,6 @@
 		 */
 		initialize: function( id, options ) {
 			var control = this, params;
-			params = options.params || options; // Prior to 4.9, params are wrapped in this property.
 
 			params = _.extend(
 				{
@@ -33,7 +32,7 @@
 					post_query_vars: null,
 					setting_property: null // To sync with the property of a given setting (e.g. value.post_parent)
 				},
-				params || {}
+				options.params || options || {} // Prior to 4.9, params are wrapped in this property.
 			);
 			if ( params.post_query_args && ! params.post_query_vars ) {
 				if ( 'undefined' !== typeof console ) {
