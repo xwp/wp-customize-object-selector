@@ -6,10 +6,11 @@ Adds a Customizer control to select one or multiple posts (and eventually terms 
 
 **Contributors:** [xwp](https://profiles.wordpress.org/xwp), [westonruter](https://profiles.wordpress.org/westonruter)  
 **Tags:** [customizer](https://wordpress.org/plugins/tags/customizer), [customize](https://wordpress.org/plugins/tags/customize), [select2](https://wordpress.org/plugins/tags/select2), [posts](https://wordpress.org/plugins/tags/posts), [pages](https://wordpress.org/plugins/tags/pages), [dropdown](https://wordpress.org/plugins/tags/dropdown)  
-**Requires at least:** 4.5.0  
-**Tested up to:** 4.8.0-alpha  
-**Stable tag:** 0.4.1  
+**Requires at least:** 4.7.0  
+**Tested up to:** 4.9.0  
+**Stable tag:** 0.4.2  
 **License:** [GPLv2 or later](http://www.gnu.org/licenses/gpl-2.0.html)  
+**Requires PHP:** 5.3  
 
 [![Build Status](https://travis-ci.org/xwp/wp-customize-object-selector.svg?branch=master)](https://travis-ci.org/xwp/wp-customize-object-selector) [![Built with Grunt](https://cdn.gruntjs.com/builtwith.svg)](http://gruntjs.com) 
 
@@ -30,6 +31,10 @@ For an example integration with the Customize Posts plugin, see pending usage as
 **Development of this plugin is done [on GitHub](https://github.com/xwp/wp-customize-object-selector). Pull requests welcome. Please see [issues](https://github.com/xwp/wp-customize-object-selector/issues) reported there before going to the [plugin forum](https://wordpress.org/support/plugin/customize-object-selector).**
 
 ## Changelog ##
+
+### 0.4.2 - 2017-11-01 ###
+* Bump minimum WP to 4.7 and indicated tested up to 4.9.
+* Update `ObjectSelectorControl` to allow passing `options` without `options.params`.
 
 ### 0.4.1 - 2017-02-17 ###
 * Increase importance of `z-index` in CSS rule for Select2 dropdown for compatibility with conflicting rule in Shortcake.

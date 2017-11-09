@@ -1,11 +1,12 @@
 === Customize Object Selector ===
 Contributors:      xwp, westonruter
 Tags:              customizer, customize, select2, posts, pages, dropdown
-Requires at least: 4.5.0
-Tested up to:      4.8.0-alpha
-Stable tag:        0.4.1
+Requires at least: 4.7.0
+Tested up to:      4.9.0
+Stable tag:        0.4.2
 License:           GPLv2 or later
 License URI:       http://www.gnu.org/licenses/gpl-2.0.html
+Requires PHP:      5.3
 
 Adds a Customizer control to select one or multiple posts (and eventually terms and users).
 
@@ -26,6 +27,11 @@ For an example integration with the Customize Posts plugin, see pending usage as
 **Development of this plugin is done [on GitHub](https://github.com/xwp/wp-customize-object-selector). Pull requests welcome. Please see [issues](https://github.com/xwp/wp-customize-object-selector/issues) reported there before going to the [plugin forum](https://wordpress.org/support/plugin/customize-object-selector).**
 
 == Changelog ==
+
+= 0.4.2 - 2017-11-01 =
+
+* Bump minimum WP to 4.7 and indicated tested up to 4.9.
+* Update `ObjectSelectorControl` to allow passing `options` without `options.params`.
 
 = 0.4.1 - 2017-02-17 =
 

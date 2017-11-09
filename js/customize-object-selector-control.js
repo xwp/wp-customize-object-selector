@@ -15,49 +15,58 @@
 	 */
 	api.ObjectSelectorControl = api.Control.extend({
 
+		/**
+		 * Initialize.
+		 *
+		 * @param {string} id - ID.
+		 * @param {object} options - Options.
+		 * @param {object} [options.params] - Deprecated params.
+		 * @returns {void}
+		 */
 		initialize: function( id, options ) {
-			var control = this, args;
+			var control = this, params;
 
-			args = options || {};
-
-			args.params = _.extend(
+			params = _.extend(
 				{
 					select2_options: {},
 					post_query_vars: null,
 					setting_property: null // To sync with the property of a given setting (e.g. value.post_parent)
 				},
-				args.params || {}
+				options.params || options || {} // Prior to 4.9, params are wrapped in this property.
 			);
-			if ( args.params.post_query_args && ! args.params.post_query_vars ) {
+			if ( params.post_query_args && ! params.post_query_vars ) {
 				if ( 'undefined' !== typeof console ) {
 					console.warn( '[customize-object-selector-control] The post_query_args arg is deprecated in favor of post_query_vars.' );
 				}
-				args.params.post_query_vars = args.params.post_query_args;
+				params.post_query_vars = params.post_query_args;
 			}
 
-			if ( true === args.params.select2_options.multiple ) {
-				args.params.select2_options.width = '100%';
+			if ( true === params.select2_options.multiple ) {
+				params.select2_options.width = '100%';
 			}
-			args.params.select2_options = _.extend(
+			params.select2_options = _.extend(
 				{
 					multiple: false,
 					cache: false,
 					width: '72%'
 				},
-				args.params.select2_options
+				params.select2_options
 			);
 
-			if ( ! args.params.type ) {
-				args.params.type = 'object_selector';
+			if ( ! params.type ) {
+				params.type = 'object_selector';
 			}
-			if ( ! args.params.content ) {
-				args.params.content = $( '<li></li>' );
-				args.params.content.attr( 'id', 'customize-control-' + id.replace( /]/g, '' ).replace( /\[/g, '-' ) );
-				args.params.content.attr( 'class', 'customize-control customize-control-' + args.params.type );
+			if ( ! params.content ) {
+				params.content = $( '<li></li>' );
+				params.content.attr( 'id', 'customize-control-' + id.replace( /]/g, '' ).replace( /\[/g, '-' ) );
+				params.content.attr( 'class', 'customize-control customize-control-' + params.type );
 			}
-			args.params.select_id = id + String( Math.random() );
+			params.select_id = id + String( Math.random() );
 
-			api.Control.prototype.initialize.call( control, id, args );
+			api.Control.prototype.initialize.call( control, id, _.extend(
+				{ params: params }, // Pass deprecated wrapped params for sake of WP<4.9.
+				params
+			) );
 
 			_.bind( control.handleRemoval, control );
 			api.control.bind( 'remove', control.handleRemoval );
