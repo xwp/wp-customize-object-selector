@@ -285,8 +285,12 @@ class Plugin {
 			$post_query_vars
 		);
 
-		// Whitelist allowed query vars.
-		$allowed_query_vars = array(
+		/**
+		 * Filters the allowed query vars, enabling plugins to allow custom query vars.
+		 *
+		 * @param array $allowed_query_vars Query vars that are allowed to be used in the query.
+		 */
+		$allowed_query_vars = apply_filters( 'customize_object_selector_allowed_query_vars', array(
 			'include_featured_images',
 			'show_initial_dropdown',
 			'dropdown_args',
@@ -303,7 +307,7 @@ class Plugin {
 			'meta_compare',
 			'orderby',
 			'order',
-		);
+		) );
 
 		// White list allowed query vars.
 		$allowed_meta_query_vars = array(
